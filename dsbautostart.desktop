@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=DSB Autostart
+Exec=dsbautostart
+Icon=gtk-execute
+Terminal=false
+StartupNotify=false
+Type=Application
+Categories=Settings;System;Utility;Application
+
