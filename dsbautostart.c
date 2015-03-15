@@ -220,7 +220,7 @@ open_asfile(const char *mode)
 	FILE   *fp;
 	size_t len;
 	
-	if ((dir = dsbcfg_mkdir(PROGRAM)) == NULL)
+	if ((dir = dsbcfg_mkdir(NULL)) == NULL)
 		xerrx(GTK_WINDOW(win), EXIT_FAILURE, "%s", dsbcfg_strerror());
 	len = strlen(dir) + sizeof(PATH_ASFILE) + 1;
 
