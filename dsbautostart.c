@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2013 Marcel Kaiser. All rights reserved.
+ * Copyright (c) 2015 Marcel Kaiser. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -22,27 +22,15 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <gtk/gtk.h>
-#include <unistd.h>
-#include <limits.h>
 #include <string.h>
 #include <stdlib.h>
-#include <ctype.h>
-#include <paths.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <sys/time.h>
-#include <sys/resource.h>
-#include <fcntl.h>
-#include <pwd.h>
-#include <err.h>
 #include <errno.h>
-#include <signal.h>
 #include <libintl.h>
+#include "dsbcfg/dsbcfg.h"
 #include "gtk-helper/gtk-helper.h"
 
 #define TITLE	     "DSB Autostart"
-#define PATH_ASFILE  ".dsbautostart.sh"
+#define PATH_ASFILE  "autostart.sh"
 #define YES_STR	     _("_Yes")	/* For yesnobox() in gtk-helper.c */
 #define NO_STR	     _("_No")	/* Dito */
 
@@ -97,7 +85,7 @@ main(int argc, char *argv[])
 	if (icon != NULL)
                 gtk_window_set_icon(GTK_WINDOW(win), icon);
 
-	label = new_label(ALIGN_LEFT,
+	label = new_label(ALIGN_LEFT, ALIGN_CENTER,
 	    _("Add commands to be executed at session start\n"));
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(win)->vbox),
 	    label, FALSE, FALSE, 0);
@@ -228,26 +216,21 @@ delete_entry(GtkWidget *bt, gpointer ent)
 static FILE *
 open_asfile(const char *mode)
 {
-	char          *path;
-	FILE	      *fp;
-	size_t	      len;
-	struct passwd *pw;
-
-	if ((pw = getpwuid(getuid())) == NULL) {
-		xerrx(GTK_WINDOW(win), EXIT_FAILURE,
-		    "Couldn't find you in the password file");
-	}
-	endpwent();
-	len = strlen(pw->pw_dir) + sizeof(PATH_ASFILE) + 1;
+	char   *path, *dir;
+	FILE   *fp;
+	size_t len;
+	
+	if ((dir = dsbcfg_mkdir(PROGRAM)) == NULL)
+		xerrx(GTK_WINDOW(win), EXIT_FAILURE, "%s", dsbcfg_strerror());
+	len = strlen(dir) + sizeof(PATH_ASFILE) + 1;
 
 	if ((path = malloc(len)) == NULL)
 		xerr(GTK_WINDOW(win), EXIT_FAILURE, "malloc()");
-	(void)snprintf(path, len, "%s/%s", pw->pw_dir, PATH_ASFILE);
-	
-	if ((fp = fopen(path, mode)) == NULL) {
-		if (errno != ENOENT)
-			xerr(GTK_WINDOW(win), EXIT_FAILURE, "fopen(%s)", path);
-	}
+	(void)snprintf(path, len, "%s/%s", dir, PATH_ASFILE);
+
+	fp = fopen(path, mode);
+	if (fp == NULL && errno != ENOENT)
+		xerr(GTK_WINDOW(win), EXIT_FAILURE, "fopen(%s)", path);
 	free(path);
 	return (fp);
 }

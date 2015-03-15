@@ -3,6 +3,7 @@ PREFIX	   = /usr/local
 BINDIR	   = ${PREFIX}/bin
 DATADIR	   = ${PREFIX}/share/${PROGRAM}
 LOCALE_DIR = ${PREFIX}/share/locale
+SOURCES	   = ${PROGRAM}.c gtk-helper/gtk-helper.c dsbcfg/dsbcfg.c
 CFLAGS	   = -Wall `pkg-config gtk+-2.0 --cflags --libs`
 CFLAGS	  += -DPROGRAM=\"${PROGRAM}\" -DPATH_LOCALE=\"${LOCALE_DIR}\"
 CFLAGS	  += -DPATH_BACKEND=\"${BINDIR}/${PROGRAM}_backend\"
@@ -13,8 +14,8 @@ CFLAGS += -DWITH_GETTEXT
 
 all: ${PROGRAM}
 
-${PROGRAM}: ${PROGRAM}.c gtk-helper/gtk-helper.c
-	${CC} -o ${PROGRAM} ${CFLAGS} ${PROGRAM}.c gtk-helper/gtk-helper.c
+${PROGRAM}: ${SOURCES}
+	${CC} -o ${PROGRAM} ${CFLAGS} ${SOURCES}
 
 install: ${PROGRAM}
 	install -g wheel -m 0755 -o root ${PROGRAM} ${BINDIR}

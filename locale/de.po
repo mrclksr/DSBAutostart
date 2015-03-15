@@ -1,7 +1,7 @@
-# German translations for PACKAGE package.
-# Copyright (C) 2012 THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
-# Marcel <EMAIL@ADDRESS>, 2012.
+# German translations for DSBAutostart package.
+# Copyright (C) 2015 Marcel Kaiser
+# This file is distributed under the same license as the DSBAutostart package.
+# Marcel Kaiser <mk@nic-nac-project.org>, 2015.
 #
 msgid ""
 msgstr ""
@@ -19,7 +19,7 @@ msgstr ""
 
 #: dsbautostart.c:97
 msgid "Add commands to be executed at session start\n"
-msgstr "Fügen Sie Befehle hinzu, die zum Sitzungsbegin gestartet werden sollen.\n"
+msgstr "Fügen Sie Befehle hinzu, die zum Sitzungsbeginn gestartet werden sollen.\n"
 
 #: dsbautostart.c:248
 #, c-format
