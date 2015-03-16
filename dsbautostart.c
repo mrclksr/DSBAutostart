@@ -64,7 +64,7 @@ main(int argc, char *argv[])
 	FILE	     *fp;
 	gboolean     active;
 	GdkPixbuf    *icon;
-	GtkWidget    *save_bt, *quit_bt, *add_bt, *sw, *label;
+	GtkWidget    *save_bt, *quit_bt, *add_bt, *sw, *label, *hbox, *align;
 	GtkIconTheme *icon_theme;
 
 #ifdef WITH_GETTEXT
@@ -76,7 +76,7 @@ main(int argc, char *argv[])
 	win = gtk_dialog_new();
 	gtk_window_set_title(GTK_WINDOW(win), _(TITLE));
 	gtk_window_set_resizable(GTK_WINDOW(win), TRUE);
-	gtk_window_set_default_size(GTK_WINDOW(win), 300, 300);
+	gtk_window_set_default_size(GTK_WINDOW(win), 500, 300);
 	gtk_container_set_border_width(GTK_CONTAINER(win), 10);
 
 	icon_theme = gtk_icon_theme_get_default();
@@ -85,7 +85,7 @@ main(int argc, char *argv[])
 	if (icon != NULL)
                 gtk_window_set_icon(GTK_WINDOW(win), icon);
 
-	label = new_label(ALIGN_LEFT, ALIGN_CENTER,
+	label = new_label(ALIGN_CENTER, ALIGN_CENTER,
 	    _("Add commands to be executed at session start\n"));
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(win)->vbox),
 	    label, FALSE, FALSE, 0);
@@ -122,10 +122,16 @@ main(int argc, char *argv[])
 	save_bt = new_button(_("_Save"), GTK_STOCK_SAVE);
 	quit_bt = new_button(_("_Quit"), GTK_STOCK_QUIT);
 
-	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(win)->action_area), add_bt,
-	    FALSE, FALSE, 0);
+	hbox  = gtk_hbox_new(FALSE, 1);
+	align = gtk_alignment_new(0, 1, 0, 0);
+	
+	gtk_container_add(GTK_CONTAINER(hbox), add_bt);
+	gtk_container_add(GTK_CONTAINER(align), hbox);
+	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(win)->vbox), align, FALSE,
+	    FALSE, 0);
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(win)->action_area),
 	    save_bt, TRUE, TRUE, 0);
+
 	gtk_box_pack_start(GTK_BOX(GTK_DIALOG(win)->action_area),
 	    quit_bt, TRUE, TRUE, 0);
 	g_signal_connect(add_bt, "clicked", G_CALLBACK(add_entry), &active);
