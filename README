@@ -1,0 +1,16 @@
+				ABOUT
+
+DSBAutostart is a Qt program that allows you to add commands to be executed at
+session start.
+
+			     INSTALLATION
+
+# qmake
+# make && make install
+
+				SETUP
+Add the following command to your ~/.xinitrc, or to your window manager's
+startup script (e.g. ~/.config/openbox/autostart.sh):
+
+sh ~/.config/DSB/autostart.sh&
+
