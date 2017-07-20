@@ -96,6 +96,7 @@ Mainwin::Mainwin(QWidget *parent) :
 	vbox->addLayout(bhbox);
 	setLayout(vbox);
 
+	setWindowTitle("DSBAutostart");
 	setMinimumSize(500, 300);
 	setWindowIcon(qh_loadThemeIcon(QString("system-run")));
 }
