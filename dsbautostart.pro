@@ -28,13 +28,13 @@ desktopfile.files = $${PROGRAM}.desktop
 HEADERS += src/list.h \
            src/mainwin.h \
            lib/dsbautostart.h \
-           qt-helper/qt-helper.h \
+           lib/qt-helper/qt-helper.h \
            ../dsbcfg/dsbcfg.h
 SOURCES += src/list.cpp \
            src/main.cpp \
            src/mainwin.cpp \
            lib/dsbautostart.c \
-           qt-helper/qt-helper.cpp \
+           lib/qt-helper/qt-helper.cpp \
            ../dsbcfg/dsbcfg.c
 
 locales.path = $${DATADIR}
