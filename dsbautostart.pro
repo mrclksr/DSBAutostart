@@ -17,6 +17,7 @@ LANGUAGES    = de
 APPSDIR	     = $${PREFIX}/share/applications
 DEFINES	    += PROGRAM=\\\"$${PROGRAM}\\\" LOCALE_PATH=\\\"$${DATADIR}\\\"
 INSTALLS     = target locales desktopfile
+QMAKE_POST_LINK = $(STRIP) $(TARGET)
 QMAKE_EXTRA_TARGETS += distclean cleanqm
 
 target.files	  = $${PROGRAM}
@@ -29,13 +30,13 @@ HEADERS += src/list.h \
            src/mainwin.h \
            lib/dsbautostart.h \
            lib/qt-helper/qt-helper.h \
-           ../dsbcfg/dsbcfg.h
+           lib/dsbcfg/dsbcfg.h
 SOURCES += src/list.cpp \
            src/main.cpp \
            src/mainwin.cpp \
            lib/dsbautostart.c \
            lib/qt-helper/qt-helper.cpp \
-           ../dsbcfg/dsbcfg.c
+           lib/dsbcfg/dsbcfg.c
 
 locales.path = $${DATADIR}
 
