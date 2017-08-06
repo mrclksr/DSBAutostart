@@ -36,7 +36,6 @@ Mainwin::Mainwin(QWidget *parent) :
 			qh_errx(parent, EXIT_FAILURE, "dsbautostart_read(): %s",
 			    dsbautostart_strerror());
 		}
-		return;
 	}
 	list = new List(&cmdlist, this);
 	QLabel *label = new QLabel(tr("Add commands to be executed at " \
