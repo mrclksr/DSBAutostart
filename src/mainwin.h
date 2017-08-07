@@ -28,15 +28,16 @@
 #include <QPushButton>
 #include <QLabel>
 #include <QWidget>
+#include <QMainWindow>
 #include <QLineEdit>
 #include <QCheckBox>
 #include <QScrollArea>
+#include <QStatusBar>
 #include <QList>
-#include <QObject>
 #include <QStyle>
 #include "list.h"
 
-class Mainwin : public QWidget {
+class Mainwin : public QMainWindow {
 Q_OBJECT
 
 public:
@@ -50,7 +51,7 @@ private slots:
 	void quit();
 	void addClicked();
 	void delClicked();
-
+	void catchListModified();
 private:
 	List *list;
 	dsbautostart_t *cmdlist;
