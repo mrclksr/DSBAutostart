@@ -43,7 +43,10 @@ public:
 	void update();
 	bool modified();
 	void unsetModified();
-
+signals:
+	void listModified();
+private slots:
+	void catchItemChanged(QListWidgetItem *item);
 private:
 	bool _modified;
 	dsbautostart_t **head;
