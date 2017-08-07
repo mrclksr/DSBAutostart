@@ -310,3 +310,42 @@ dsbautostart_item_move_down(dsbautostart_t **head, dsbautostart_t *as)
 	dsbautostart_item_move_up(head, as->next);
 }
 
+dsbautostart_t *
+dsbautostart_copy(dsbautostart_t *list)
+{
+	dsbautostart_t *cp = NULL;
+
+	for (; list != NULL; list = list->next) {
+		if (dsbautostart_add_entry(&cp, list->cmd,
+		    list->active) == NULL)
+			return (NULL);
+	}
+	return (cp);
+}
+
+bool
+dsbautostart_cmp(dsbautostart_t *l0, dsbautostart_t *l1)
+{
+
+	for (; l0 != NULL && l1 != NULL; l0 = l0->next, l1 = l1->next) {
+		if (l0->active != l1->active)
+			return (false);
+		if (strcmp(l0->cmd, l1->cmd) != 0)
+			return (false);
+	}
+	if (l0 != NULL || l1 != NULL)
+		return (false);
+	return (true);
+}
+
+void
+dsbautostart_free(dsbautostart_t *list)
+{
+	dsbautostart_t *entry, *next;
+
+	for (entry = list; entry != NULL; entry = next) {
+		free(entry->cmd); next = entry->next;
+		free(entry);
+	}
+}
+

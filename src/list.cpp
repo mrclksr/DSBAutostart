@@ -38,6 +38,12 @@ List::List(dsbautostart_t **head, QWidget *parent)
 	setLayout(vbox);
 	list->setToolTip(QString(tr("Double click to edit. Use checkbox to " \
 	    "activate/deactivate command")));
+	if ((ascp = dsbautostart_copy(*head)) == NULL) {
+		if (dsbautostart_error()) {
+			qh_err(this, EXIT_FAILURE, "%s",
+			    dsbautostart_strerror());
+		}
+	}
 	for (dsbautostart_t *ap = *head; ap != NULL; ap = ap->next)
 		addItem(ap);
 	_modified = false;
@@ -54,6 +60,13 @@ List::modified()
 void
 List::unsetModified()
 {
+	dsbautostart_free(ascp);
+	if ((ascp = dsbautostart_copy(*head)) == NULL) {
+		if (dsbautostart_error()) {
+			qh_err(this, EXIT_FAILURE, "%s",
+			    dsbautostart_strerror());
+		}
+	}
 	_modified = false;
 }
 
@@ -65,8 +78,7 @@ List::newItem()
 	if (as == NULL)
 		qh_errx(this, EXIT_FAILURE, "%s", dsbautostart_strerror());
 	List::addItem(as);
-	_modified = true;
-	emit listModified();
+	compare();
 }
 
 void
@@ -83,10 +95,10 @@ List::addItem(dsbautostart_t *as)
 }
 
 void
-List::catchItemChanged(QListWidgetItem * /*item*/)
+List::catchItemChanged(QListWidgetItem *item)
 {
-	emit listModified();
-	_modified = true;
+	updateItem(item);
+	compare();
 }
 
 void
@@ -102,8 +114,7 @@ List::delItem()
 	list->removeItemWidget(item);
 	items.removeOne(item);
 	delete item;
-	emit listModified();
-	_modified = true;
+	compare();
 }
 
 void
@@ -125,8 +136,7 @@ List::moveItemUp()
 	list->takeItem(row);
 	list->insertItem(--row, item);
 	list->setCurrentRow(row);
-	emit listModified();
-	_modified = true;
+	compare();
 }
 
 void
@@ -148,9 +158,7 @@ List::moveItemDown()
 	list->takeItem(row);
 	list->insertItem(++row, item);
 	list->setCurrentRow(row);
-	
-	emit listModified();
-	_modified = true;
+	compare();
 }
 
 void
@@ -160,28 +168,28 @@ List::updateItem(QListWidgetItem *item)
 	dsbautostart_t *as;
 
 	as = (dsbautostart_t *)item->data(Qt::UserRole).value<void *>();
-	if (QString(as->cmd) != item->text() ||
-	    (cbstate != as->active)) {
-		if (dsbautostart_set(as, item->text().toUtf8().constData(),
-                    cbstate) == -1) {
-			qh_errx(this, EXIT_FAILURE, "%s",
-			    dsbautostart_strerror());
-		}
-		emit listModified();
-		_modified = true;
-	}
+	if (dsbautostart_set(as, item->text().toUtf8().constData(),
+	    cbstate) == -1)
+		qh_errx(this, EXIT_FAILURE, "%s", dsbautostart_strerror());
+	compare();
 }
 
 void
 List::update()
 {
-	bool mod = _modified;
-
-	_modified = false;
 	for (int i = 0; i < items.size(); i++)
 		updateItem(items.at(i));
-	if (mod) {
+}
+
+void
+List::compare()
+{
+	if (!dsbautostart_cmp(ascp, *head)) {
+		emit listModified(true);
 		_modified = true;
-		emit listModified();
+	} else	{
+		_modified = false;
+		emit listModified(false);
 	}
 }
+

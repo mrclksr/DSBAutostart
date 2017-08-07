@@ -42,12 +42,15 @@ typedef struct dsbautostart_s {
 int		dsbautostart_set(dsbautostart_t *, const char *, bool);
 int		dsbautostart_write(dsbautostart_t *);
 void		dsbautostart_del_entry(dsbautostart_t **, dsbautostart_t *);
+void		dsbautostart_free(dsbautostart_t *);
 void		dsbautostart_item_move_up(dsbautostart_t **, dsbautostart_t *);
 void		dsbautostart_item_move_down(dsbautostart_t **, dsbautostart_t *);
 bool		dsbautostart_error(void);
+bool		dsbautostart_cmp(dsbautostart_t *l0, dsbautostart_t *l1);
 const char	*dsbautostart_strerror(void);
 dsbautostart_t *dsbautostart_read(void);
 dsbautostart_t *dsbautostart_add_entry(dsbautostart_t **, const char *, bool);
+dsbautostart_t *dsbautostart_copy(dsbautostart_t *);
 #ifdef __cplusplus
 }
 #endif  /* __cplusplus */

@@ -44,12 +44,14 @@ public:
 	bool modified();
 	void unsetModified();
 signals:
-	void listModified();
+	void listModified(bool);
 private slots:
 	void catchItemChanged(QListWidgetItem *item);
 private:
+	void compare();
+private:
 	bool _modified;
-	dsbautostart_t **head;
+	dsbautostart_t **head, *ascp;
 	QList<QListWidgetItem *> items;
 	QListWidget *list;
 

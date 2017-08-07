@@ -51,7 +51,7 @@ private slots:
 	void quit();
 	void addClicked();
 	void delClicked();
-	void catchListModified();
+	void catchListModified(bool state);
 private:
 	List *list;
 	dsbautostart_t *cmdlist;

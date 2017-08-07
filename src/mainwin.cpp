@@ -40,7 +40,8 @@ Mainwin::Mainwin(QWidget *parent) :
 	QWidget *container = new QWidget();
 
 	list = new List(&cmdlist, this);
-	connect(list, SIGNAL(listModified()), this, SLOT(catchListModified()));
+	connect(list, SIGNAL(listModified(bool)), this,
+	    SLOT(catchListModified(bool)));
 
 	QLabel *label = new QLabel(tr("Add commands to be executed at " \
 	    "session start"));
@@ -107,9 +108,9 @@ Mainwin::Mainwin(QWidget *parent) :
 }
 
 void
-Mainwin::catchListModified()
+Mainwin::catchListModified(bool status)
 {
-	statusBar()->showMessage(tr("Modified"));
+	statusBar()->showMessage(status ? tr("Modified") : "");
 }
 
 void
