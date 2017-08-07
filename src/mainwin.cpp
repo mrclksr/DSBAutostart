@@ -28,7 +28,7 @@
 #include "qt-helper/qt-helper.h"
 
 Mainwin::Mainwin(QWidget *parent) : 
-    QWidget(parent) {
+    QMainWindow(parent) {
 	QIcon icon;
 
 	if ((cmdlist = dsbautostart_read()) == NULL) {
@@ -37,7 +37,11 @@ Mainwin::Mainwin(QWidget *parent) :
 			    dsbautostart_strerror());
 		}
 	}
+	QWidget *container = new QWidget();
+
 	list = new List(&cmdlist, this);
+	connect(list, SIGNAL(listModified()), this, SLOT(catchListModified()));
+
 	QLabel *label = new QLabel(tr("Add commands to be executed at " \
 	    "session start"));
 
@@ -93,11 +97,19 @@ Mainwin::Mainwin(QWidget *parent) :
 	vbox->addWidget(label, 0, Qt::AlignCenter);
 	vbox->addLayout(hbox);
 	vbox->addLayout(bhbox);
-	setLayout(vbox);
-
+	statusBar()->showMessage("");
+	container->setLayout(vbox);
+	setCentralWidget(container);
 	setWindowTitle("DSBAutostart");
 	setMinimumSize(500, 300);
 	setWindowIcon(qh_loadThemeIcon(QString("system-run")));
+
+}
+
+void
+Mainwin::catchListModified()
+{
+	statusBar()->showMessage(tr("Modified"));
 }
 
 void
@@ -109,6 +121,7 @@ Mainwin::save()
 		    dsbautostart_strerror());
 	}
 	list->unsetModified();
+	statusBar()->showMessage(tr("Saved"), 5000);
 }
 
 void
