@@ -41,6 +41,8 @@ List::List(dsbautostart_t **head, QWidget *parent)
 	for (dsbautostart_t *ap = *head; ap != NULL; ap = ap->next)
 		addItem(ap);
 	_modified = false;
+	connect(list, SIGNAL(itemChanged(QListWidgetItem *)), this,
+	    SLOT(catchItemChanged(QListWidgetItem *)));
 }
 
 bool
@@ -64,6 +66,7 @@ List::newItem()
 		qh_errx(this, EXIT_FAILURE, "%s", dsbautostart_strerror());
 	List::addItem(as);
 	_modified = true;
+	emit listModified();
 }
 
 void
@@ -80,6 +83,13 @@ List::addItem(dsbautostart_t *as)
 }
 
 void
+List::catchItemChanged(QListWidgetItem * /*item*/)
+{
+	emit listModified();
+	_modified = true;
+}
+
+void
 List::delItem()
 {
 	dsbautostart_t *as;
@@ -92,7 +102,7 @@ List::delItem()
 	list->removeItemWidget(item);
 	items.removeOne(item);
 	delete item;
-
+	emit listModified();
 	_modified = true;
 }
 
@@ -115,7 +125,7 @@ List::moveItemUp()
 	list->takeItem(row);
 	list->insertItem(--row, item);
 	list->setCurrentRow(row);
-
+	emit listModified();
 	_modified = true;
 }
 
@@ -139,6 +149,7 @@ List::moveItemDown()
 	list->insertItem(++row, item);
 	list->setCurrentRow(row);
 	
+	emit listModified();
 	_modified = true;
 }
 
@@ -156,6 +167,7 @@ List::updateItem(QListWidgetItem *item)
 			qh_errx(this, EXIT_FAILURE, "%s",
 			    dsbautostart_strerror());
 		}
+		emit listModified();
 		_modified = true;
 	}
 }
@@ -168,7 +180,8 @@ List::update()
 	_modified = false;
 	for (int i = 0; i < items.size(); i++)
 		updateItem(items.at(i));
-	if (mod)
+	if (mod) {
 		_modified = true;
+		emit listModified();
+	}
 }
-
