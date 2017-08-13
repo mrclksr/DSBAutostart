@@ -110,7 +110,8 @@ List::delItem()
 	if (item == 0)
 		return;
 	entry = (entry_t *)item->data(Qt::UserRole).value<void *>();
-	dsbautostart_del_entry(as, entry);
+	if (dsbautostart_del_entry(as, entry) == NULL)
+		qh_errx(this, EXIT_FAILURE, "%s", dsbautostart_strerror());
 	list->removeItemWidget(item);
 	items.removeOne(item);
 	delete item;
@@ -127,10 +128,9 @@ List::moveItemUp()
 	if (item == 0)
 		return;
 	entry = (entry_t *)item->data(Qt::UserRole).value<void *>();
-	dsbautostart_entry_move_up(as, entry);
-
+	if (dsbautostart_entry_move_up(as, entry) == NULL)
+		qh_errx(this, EXIT_FAILURE, "%s", dsbautostart_strerror());
 	row = list->currentRow();
-
 	if (row == 0)
 		return;
 	list->takeItem(row);
@@ -149,8 +149,8 @@ List::moveItemDown()
 	if (item == 0)
 		return;
 	entry = (entry_t *)item->data(Qt::UserRole).value<void *>();
-	dsbautostart_entry_move_down(as, entry);
-
+	if (dsbautostart_entry_move_down(as, entry) == NULL)
+		qh_errx(this, EXIT_FAILURE, "%s", dsbautostart_strerror());
 	row = list->currentRow();
 
 	if (list->count() - 1 == row)
@@ -189,10 +189,6 @@ List::undo()
 	items.clear();
 	for (entry_t *entry = as->entry; entry != NULL; entry = entry->next)
 		addItem(entry);
-#if 0
-	connect(list, SIGNAL(itemChanged(QListWidgetItem *)), this,
-	    SLOT(catchItemChanged(QListWidgetItem *)));
-#endif
 	compare();
 }
 
