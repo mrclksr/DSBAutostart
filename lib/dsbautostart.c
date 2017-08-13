@@ -44,13 +44,13 @@ static FILE	*open_asfile(void);
 static FILE	*open_tempfile(char **);
 static void	_clearerr(void);
 static void	seterr(const char *msg, ...);
-static void 	insert_entry(dsbautostart_t *as, entry_t *entry, entry_t *prev, entry_t *next);
 static void	entry_del(dsbautostart_t *as, entry_t *entry);
 static void	entry_move_up(dsbautostart_t *as, entry_t *entry);
 static void	entry_move_down(dsbautostart_t *as, entry_t *entry);
+static void 	insert_entry(dsbautostart_t *as, entry_t *entry,
+		entry_t *prev, entry_t *next);
 static entry_t *entry_add(dsbautostart_t *, const char *, bool);
 static change_history_t *hist_add(change_history_t **, change_history_t **);
-
 
 static bool error = false;
 static char errbuf[1024];
@@ -244,17 +244,17 @@ dsbautostart_set(dsbautostart_t *as, entry_t *entry, const char *cmd,
 {
 	change_history_t *re, *un;
 
-	re = hist_add(&as->redo_head, &as->redo_index);
-	un = hist_add(&as->undo_head, &as->undo_index);
-
-	un->cmd    = strdup(entry->cmd);
+	if ((re = hist_add(&as->redo_head, &as->redo_index)) == NULL ||
+	    (un = hist_add(&as->undo_head, &as->undo_index)) == NULL)
+		return (-1);
+	if ((un->cmd = strdup(entry->cmd)) == NULL)
+		ERROR(-1, "strdup()");
 	un->type   = CHANGE_TYPE_CONTENT;
 	un->entry  = entry;
 	un->active = entry->active;
 
-	entry_set(entry, cmd, active);
-
-	re->cmd    = strdup(cmd);
+	if ((re->cmd = strdup(cmd)) == NULL)
+		ERROR(-1, "strdup()");
 	re->type   = CHANGE_TYPE_CONTENT;
 	re->entry  = entry;
 	re->active = active;
@@ -262,17 +262,19 @@ dsbautostart_set(dsbautostart_t *as, entry_t *entry, const char *cmd,
 	as->undo_index = un;
 	as->redo_index = re;
 	
+	entry_set(entry, cmd, active);
+
 	return (0);
 }
 
-void
+entry_t *
 dsbautostart_del_entry(dsbautostart_t *as, entry_t *entry)
 {
 	change_history_t *re, *un;
 
-	re = hist_add(&as->redo_head, &as->redo_index);
-	un = hist_add(&as->undo_head, &as->undo_index);
-
+	if ((re = hist_add(&as->redo_head, &as->redo_index)) == NULL ||
+	    (un = hist_add(&as->undo_head, &as->undo_index)) == NULL)
+		return (NULL);
 	un->type   = CHANGE_TYPE_DELETE;
 	un->entry  = entry;
 	un->eprev  = entry->prev;
@@ -280,47 +282,48 @@ dsbautostart_del_entry(dsbautostart_t *as, entry_t *entry)
 
 	re->type   = CHANGE_TYPE_DELETE;
 	re->entry  = entry;
-	re->eprev  = entry->prev;
-	re->enext  = entry->next;
 
 	as->redo_index = re;
 	as->undo_index = un;
 
 	entry_del(as, entry);
+
+	return (entry);
 }
 
 entry_t *
 dsbautostart_add_entry(dsbautostart_t *as, const char *cmd, bool active)
 {
-	entry_t *entry = entry_add(as, cmd, active);
+	entry_t *entry;
 	change_history_t *re, *un;
 
-	re = hist_add(&as->redo_head, &as->redo_index);
-	un = hist_add(&as->undo_head, &as->undo_index);
-
+	if ((entry = entry_add(as, cmd, active)) == NULL)
+		return (NULL);
+	if ((re = hist_add(&as->redo_head, &as->redo_index)) == NULL ||
+	    (un = hist_add(&as->undo_head, &as->undo_index)) == NULL)
+		return (NULL);
 	un->type   = CHANGE_TYPE_ADD;
 	un->entry  = entry;
-	un->eprev  = entry->prev;
-	un->enext  = entry->next;
 
 	re->type   = CHANGE_TYPE_ADD;
 	re->entry  = entry;
 	re->eprev  = entry->prev;
 	re->enext  = entry->next;
+
 	as->redo_index = re;
 	as->undo_index = un;
 
 	return (entry);
 }
 
-void
+entry_t *
 dsbautostart_entry_move_up(dsbautostart_t *as, entry_t *entry)
 {
 	change_history_t *re, *un;
 
-	re = hist_add(&as->redo_head, &as->redo_index);
-	un = hist_add(&as->undo_head, &as->undo_index);
-
+	if ((re = hist_add(&as->redo_head, &as->redo_index)) == NULL ||
+	    (un = hist_add(&as->undo_head, &as->undo_index)) == NULL)
+		return (NULL);
 	un->type  = CHANGE_TYPE_MOVE_UP;
 	un->entry = entry;
 
@@ -331,16 +334,18 @@ dsbautostart_entry_move_up(dsbautostart_t *as, entry_t *entry)
 	as->undo_index = un;
 
 	entry_move_up(as, entry);
+
+	return (entry);
 }
 
-void
+entry_t *
 dsbautostart_entry_move_down(dsbautostart_t *as, entry_t *entry)
 {
 	change_history_t *re, *un;
 
-	re = hist_add(&as->redo_head, &as->redo_index);
-	un = hist_add(&as->undo_head, &as->undo_index);
-
+	if ((re = hist_add(&as->redo_head, &as->redo_index)) == NULL ||
+	    (un = hist_add(&as->undo_head, &as->undo_index)) == NULL)
+		return (NULL);
 	un->type  = CHANGE_TYPE_MOVE_DOWN;
 	un->entry = entry;
 
@@ -351,6 +356,8 @@ dsbautostart_entry_move_down(dsbautostart_t *as, entry_t *entry)
 	as->undo_index = un;
 
 	entry_move_down(as, entry);
+
+	return (entry);
 }
 
 dsbautostart_t *
@@ -359,7 +366,8 @@ dsbautostart_copy(dsbautostart_t *as)
 	dsbautostart_t *cp;
 	entry_t *entry;
 
-	cp = malloc(sizeof(dsbautostart_t));
+	if ((cp = malloc(sizeof(dsbautostart_t))) == NULL)
+		ERROR(NULL, "malloc()");
 	cp->undo_head = cp->redo_head = NULL;
 	cp->undo_index = cp->redo_index = NULL;
 	cp->entry = NULL;
@@ -463,7 +471,6 @@ dsbautostart_redo(dsbautostart_t *as)
 		h = as->redo_index = as->redo_index->next;
 	switch (h->type) {
 	case CHANGE_TYPE_CONTENT:
-		puts("CONTENT");
 		entry_set(h->entry, h->cmd, h->active);
 		break;
 	case CHANGE_TYPE_DELETE:
@@ -494,7 +501,8 @@ hist_add(change_history_t **head, change_history_t **idx)
 {
 	change_history_t *hist;
 
-	hist = malloc(sizeof(change_history_t));
+	if ((hist = malloc(sizeof(change_history_t))) == NULL)
+		ERROR(NULL, "malloc()");
 	hist->next = hist->prev = NULL;
 	if (*idx == NULL) {
 		if (*head != NULL) {
