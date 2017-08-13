@@ -70,16 +70,16 @@ int		dsbautostart_set(dsbautostart_t *, entry_t *, const char *,
 int		dsbautostart_write(dsbautostart_t *);
 void		dsbautostart_undo(dsbautostart_t *);
 void		dsbautostart_redo(dsbautostart_t *);
-void		dsbautostart_del_entry(dsbautostart_t *, entry_t *);
 void		dsbautostart_free(dsbautostart_t *);
-void		dsbautostart_entry_move_up(dsbautostart_t *, entry_t *);
-void		dsbautostart_entry_move_down(dsbautostart_t *, entry_t *);
 bool		dsbautostart_error(void);
 bool		dsbautostart_cmp(dsbautostart_t *, dsbautostart_t *);
 bool		dsbautostart_can_undo(dsbautostart_t *);
 bool		dsbautostart_can_redo(dsbautostart_t *);
-const char	*dsbautostart_strerror(void);
+entry_t		*dsbautostart_entry_move_up(dsbautostart_t *, entry_t *);
+entry_t		*dsbautostart_entry_move_down(dsbautostart_t *, entry_t *);
+entry_t		*dsbautostart_del_entry(dsbautostart_t *, entry_t *);
 entry_t		*dsbautostart_add_entry(dsbautostart_t *, const char *, bool);
+const char	*dsbautostart_strerror(void);
 dsbautostart_t *dsbautostart_read(void);
 dsbautostart_t *dsbautostart_copy(dsbautostart_t *);
 #ifdef __cplusplus
