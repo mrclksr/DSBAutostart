@@ -39,7 +39,7 @@ Mainwin::Mainwin(QWidget *parent) :
 	}
 	QWidget *container = new QWidget();
 
-	list = new List(&cmdlist, this);
+	list = new List(cmdlist, this);
 	connect(list, SIGNAL(listModified(bool)), this,
 	    SLOT(catchListModified(bool)));
 
@@ -47,6 +47,16 @@ Mainwin::Mainwin(QWidget *parent) :
 	    "session start"));
 
 	QVBoxLayout *bvbox = new QVBoxLayout;
+
+	icon = qh_loadIcon("edit-undo", NULL);
+	undo  = new QPushButton(icon, tr("&Undo"), this);
+	undo->setStyleSheet("text-align: left"); 
+	undo->setEnabled(list->canUndo());
+
+	icon = qh_loadIcon("edit-redo", NULL);
+	redo  = new QPushButton(icon, tr("&Redo"), this);
+	redo->setStyleSheet("text-align: left"); 
+	redo->setEnabled(list->canRedo());
 
 	icon = qh_loadIcon("list-add", NULL);
 	QPushButton *add  = new QPushButton(icon, tr("&Add"), this);
@@ -64,12 +74,15 @@ Mainwin::Mainwin(QWidget *parent) :
 	QPushButton *down = new QPushButton(icon, tr("Dow&n"), this);
 	down->setStyleSheet("text-align: left"); 
 
-	connect(up,   SIGNAL(clicked()), this, SLOT(upClicked()));
-	connect(del,  SIGNAL(clicked()), this, SLOT(delClicked()));
-	connect(add,  SIGNAL(clicked()), this, SLOT(addClicked()));
-	connect(down, SIGNAL(clicked()), this, SLOT(downClicked()));
-
+	connect(up,	SIGNAL(clicked()), this, SLOT(upClicked()));
+	connect(del,	SIGNAL(clicked()), this, SLOT(delClicked()));
+	connect(add,	SIGNAL(clicked()), this, SLOT(addClicked()));
+	connect(down,	SIGNAL(clicked()), this, SLOT(downClicked()));
+	connect(undo,	SIGNAL(clicked()), this, SLOT(undoClicked()));
+	connect(redo,	SIGNAL(clicked()), this, SLOT(redoClicked()));
 	bvbox->addStretch(1);
+	bvbox->addWidget(undo, 1, 0);
+	bvbox->addWidget(redo, 1, 0);
 	bvbox->addWidget(add, 1, 0);
 	bvbox->addWidget(del, 1, 0);
 	bvbox->addWidget(up, 1, 0);
@@ -110,6 +123,8 @@ Mainwin::Mainwin(QWidget *parent) :
 void
 Mainwin::catchListModified(bool status)
 {
+	undo->setEnabled(list->canUndo());
+	redo->setEnabled(list->canRedo());
 	statusBar()->showMessage(status ? tr("Modified") : "");
 }
 
@@ -186,5 +201,19 @@ void
 Mainwin::delClicked()
 {
 	list->delItem();
+}
+
+void
+Mainwin::undoClicked()
+{
+	list->undo();
+	undo->setEnabled(list->canUndo());
+}
+
+void
+Mainwin::redoClicked()
+{
+	list->redo();
+	redo->setEnabled(list->canRedo());
 }
 

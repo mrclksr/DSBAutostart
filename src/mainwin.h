@@ -51,9 +51,12 @@ private slots:
 	void quit();
 	void addClicked();
 	void delClicked();
+	void undoClicked();
+	void redoClicked();
 	void catchListModified(bool state);
 private:
 	List *list;
+	QPushButton *undo, *redo;
 	dsbautostart_t *cmdlist;
 };
 
