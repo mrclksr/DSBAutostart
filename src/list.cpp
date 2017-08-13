@@ -26,26 +26,26 @@
 #include "list.h"
 #include "qt-helper/qt-helper.h"
 
-List::List(dsbautostart_t **head, QWidget *parent)
+List::List(dsbautostart_t *as, QWidget *parent)
 	: QWidget(parent) {
 	
 	list = new QListWidget();
 	list->setMouseTracking(true);
-	this->head = head;
+	this->as = as;
 
 	QVBoxLayout *vbox = new QVBoxLayout;
 	vbox->addWidget(list);
 	setLayout(vbox);
 	list->setToolTip(QString(tr("Double click to edit. Use checkbox to " \
 	    "activate/deactivate command")));
-	if ((ascp = dsbautostart_copy(*head)) == NULL) {
+	if ((ascp = dsbautostart_copy(as)) == NULL) {
 		if (dsbautostart_error()) {
 			qh_err(this, EXIT_FAILURE, "%s",
 			    dsbautostart_strerror());
 		}
 	}
-	for (dsbautostart_t *ap = *head; ap != NULL; ap = ap->next)
-		addItem(ap);
+	for (entry_t *entry = as->entry; entry != NULL; entry = entry->next)
+		addItem(entry);
 	_modified = false;
 	connect(list, SIGNAL(itemChanged(QListWidgetItem *)), this,
 	    SLOT(catchItemChanged(QListWidgetItem *)));
@@ -61,7 +61,7 @@ void
 List::unsetModified()
 {
 	dsbautostart_free(ascp);
-	if ((ascp = dsbautostart_copy(*head)) == NULL) {
+	if ((ascp = dsbautostart_copy(as)) == NULL) {
 		if (dsbautostart_error()) {
 			qh_err(this, EXIT_FAILURE, "%s",
 			    dsbautostart_strerror());
@@ -73,22 +73,22 @@ List::unsetModified()
 void
 List::newItem()
 {
-	dsbautostart_t *as = dsbautostart_add_entry(head, "", true);
+	entry_t *entry = dsbautostart_add_entry(as, "", true);
 
-	if (as == NULL)
+	if (entry == NULL)
 		qh_errx(this, EXIT_FAILURE, "%s", dsbautostart_strerror());
-	List::addItem(as);
+	List::addItem(entry);
 	compare();
 }
 
 void
-List::addItem(dsbautostart_t *as)
+List::addItem(entry_t *entry)
 {
-	QListWidgetItem *item = new QListWidgetItem(as->cmd);
+	QListWidgetItem *item = new QListWidgetItem(entry->cmd);
 	item->setFlags(Qt::ItemIsEditable | Qt::ItemIsUserCheckable |
 	    Qt::ItemIsSelectable | Qt::ItemIsEnabled);
-	item->setCheckState(as->active ? Qt::Checked : Qt::Unchecked);
-	item->setData(Qt::UserRole, qVariantFromValue((void *)as));
+	item->setCheckState(entry->active ? Qt::Checked : Qt::Unchecked);
+	item->setData(Qt::UserRole, qVariantFromValue((void *)entry));
 	list->addItem(item);
 	list->setCurrentItem(item);
 	items.append(item);
@@ -104,13 +104,13 @@ List::catchItemChanged(QListWidgetItem *item)
 void
 List::delItem()
 {
-	dsbautostart_t *as;
+	entry_t *entry;
 	QListWidgetItem *item = list->currentItem();
 
 	if (item == 0)
 		return;
-	as = (dsbautostart_t *)item->data(Qt::UserRole).value<void *>();
-	dsbautostart_del_entry(head, as);
+	entry = (entry_t *)item->data(Qt::UserRole).value<void *>();
+	dsbautostart_del_entry(as, entry);
 	list->removeItemWidget(item);
 	items.removeOne(item);
 	delete item;
@@ -121,13 +121,13 @@ void
 List::moveItemUp()
 {
 	int row;
-	dsbautostart_t *as;
+	entry_t *entry;
 	QListWidgetItem *item = list->currentItem();
 
 	if (item == 0)
 		return;
-	as = (dsbautostart_t *)item->data(Qt::UserRole).value<void *>();
-	dsbautostart_item_move_up(head, as);
+	entry = (entry_t *)item->data(Qt::UserRole).value<void *>();
+	dsbautostart_entry_move_up(as, entry);
 
 	row = list->currentRow();
 
@@ -143,13 +143,13 @@ void
 List::moveItemDown()
 {
 	int row;
-	dsbautostart_t *as;
+	entry_t *entry;
 	QListWidgetItem *item = list->currentItem();
 
 	if (item == 0)
 		return;
-	as = (dsbautostart_t *)item->data(Qt::UserRole).value<void *>();
-	dsbautostart_item_move_down(head, as);
+	entry = (entry_t *)item->data(Qt::UserRole).value<void *>();
+	dsbautostart_entry_move_down(as, entry);
 
 	row = list->currentRow();
 
@@ -165,10 +165,10 @@ void
 List::updateItem(QListWidgetItem *item)
 {
 	bool cbstate = item->checkState() == Qt::Unchecked ? false : true;
-	dsbautostart_t *as;
+	entry_t *entry;
 
-	as = (dsbautostart_t *)item->data(Qt::UserRole).value<void *>();
-	if (dsbautostart_set(as, item->text().toUtf8().constData(),
+	entry = (entry_t *)item->data(Qt::UserRole).value<void *>();
+	if (dsbautostart_set(as, entry, item->text().toUtf8().constData(),
 	    cbstate) == -1)
 		qh_errx(this, EXIT_FAILURE, "%s", dsbautostart_strerror());
 	compare();
@@ -182,9 +182,48 @@ List::update()
 }
 
 void
+List::undo()
+{
+	dsbautostart_undo(as);
+	list->clear();
+	items.clear();
+	for (entry_t *entry = as->entry; entry != NULL; entry = entry->next)
+		addItem(entry);
+#if 0
+	connect(list, SIGNAL(itemChanged(QListWidgetItem *)), this,
+	    SLOT(catchItemChanged(QListWidgetItem *)));
+#endif
+	compare();
+}
+
+void
+List::redo()
+{
+	dsbautostart_redo(as);
+	list->clear();
+	items.clear();
+	for (entry_t *entry = as->entry; entry != NULL; entry = entry->next)
+		addItem(entry);
+	compare();
+}
+
+bool
+List::canUndo()
+{
+	return (dsbautostart_can_undo(as));
+}
+
+bool
+List::canRedo()
+{
+
+	return (dsbautostart_can_redo(as));
+}
+
+void
 List::compare()
 {
-	if (!dsbautostart_cmp(ascp, *head)) {
+	if (!dsbautostart_cmp(ascp, as)) {
 		emit listModified(true);
 		_modified = true;
 	} else	{

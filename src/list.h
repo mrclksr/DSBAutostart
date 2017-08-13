@@ -34,14 +34,18 @@ class List : public QWidget {
 Q_OBJECT
 
 public:
-	List(dsbautostart_t **head, QWidget *parent = 0);
-	void addItem(dsbautostart_t *as);
+	List(dsbautostart_t *as, QWidget *parent = 0);
+	void addItem(entry_t *entry);
 	void moveItemUp();
 	void moveItemDown();
 	void newItem();
 	void delItem();
 	void update();
+	void undo();
+	void redo();
 	bool modified();
+	bool canUndo();
+	bool canRedo();
 	void unsetModified();
 signals:
 	void listModified(bool);
@@ -51,10 +55,9 @@ private:
 	void compare();
 private:
 	bool _modified;
-	dsbautostart_t **head, *ascp;
+	dsbautostart_t *as, *ascp;
 	QList<QListWidgetItem *> items;
 	QListWidget *list;
-
 	void updateItem(QListWidgetItem *item);
 };
 
