@@ -32,18 +32,28 @@
 #include <sys/types.h>
 #include "dsbautostart.h"
 
-static char *get_aspath(const char *);
-static char *readln(FILE *);
-static FILE *open_asfile(void);
+#define ERROR(ret, fmt, ...) do { \
+	seterr(fmt, ##__VA_ARGS__); \
+	return (ret); \
+} while (0)
+
+static int	entry_set(entry_t *, const char *, bool);
+static char	*readln(FILE *fp);
+static char	*get_aspath(const char *);
+static FILE	*open_asfile(void);
+static FILE	*open_tempfile(char **);
+static void	_clearerr(void);
+static void	seterr(const char *msg, ...);
+static void 	insert_entry(dsbautostart_t *as, entry_t *entry, entry_t *prev, entry_t *next);
+static void	entry_del(dsbautostart_t *as, entry_t *entry);
+static void	entry_move_up(dsbautostart_t *as, entry_t *entry);
+static void	entry_move_down(dsbautostart_t *as, entry_t *entry);
+static entry_t *entry_add(dsbautostart_t *, const char *, bool);
+static change_history_t *hist_add(change_history_t **, change_history_t **);
+
 
 static bool error = false;
 static char errbuf[1024];
-
-#define ERROR(ret, fmt, ...) \
-	do { \
-		seterr(fmt, ##__VA_ARGS__); \
-		return (ret); \
-	} while (0)
 
 static void
 _clearerr()
@@ -168,10 +178,13 @@ dsbautostart_read()
 	char *p;
 	bool active;
 	FILE *fp;
-	dsbautostart_t *as = NULL;
+	dsbautostart_t *as;
 
 	_clearerr();
-
+	if ((as = malloc(sizeof(dsbautostart_t))) == NULL)
+		return (NULL);
+	as->redo_head = as->undo_head = as->redo_index = as->undo_index = NULL;
+	as->entry = NULL;
 	if ((fp = open_asfile()) == NULL)
 		return (NULL);
 	while ((p = readln(fp)) != NULL) {
@@ -184,7 +197,7 @@ dsbautostart_read()
 			active = true;
 		if (p[strlen(p) - 1] == '&')
 			p[strlen(p) - 1] = '\0';
-		if (dsbautostart_add_entry(&as, p, active) == NULL)
+		if (entry_add(as, p, active) == NULL)
 			return (NULL);
 	}
 	(void)fclose(fp);
@@ -198,6 +211,7 @@ dsbautostart_write(dsbautostart_t *as)
 	int  ret;
 	FILE *fp;
 	char *tmpath, *topath;
+	entry_t *entry;
 
 	_clearerr();
 	
@@ -207,13 +221,13 @@ dsbautostart_write(dsbautostart_t *as)
 		return (-1);
 	if (fputs("#!/bin/sh\n", fp) == EOF)
 		ERROR(-1, "fputs()");
-	for (; as != NULL; as = as->next) {
-		if (as->cmd == NULL || *as->cmd == '\0')
+	for (entry = as->entry; entry != NULL; entry = entry->next) {
+		if (entry->cmd == NULL || *entry->cmd == '\0')
 			continue;
-		if (!as->active)
-			(void)fprintf(fp, "#[INACTIVE]#%s&\n", as->cmd);
+		if (!entry->active)
+			(void)fprintf(fp, "#[INACTIVE]#%s&\n", entry->cmd);
 		else
-			(void)fprintf(fp, "%s&\n", as->cmd);
+			(void)fprintf(fp, "%s&\n", entry->cmd);
 	}
 	(void)fclose(fp);
 
@@ -225,7 +239,320 @@ dsbautostart_write(dsbautostart_t *as)
 }
 
 int
-dsbautostart_set(dsbautostart_t *entry, const char *cmd, bool active)
+dsbautostart_set(dsbautostart_t *as, entry_t *entry, const char *cmd,
+    bool active)
+{
+	change_history_t *re, *un;
+
+	re = hist_add(&as->redo_head, &as->redo_index);
+	un = hist_add(&as->undo_head, &as->undo_index);
+
+	un->cmd    = strdup(entry->cmd);
+	un->type   = CHANGE_TYPE_CONTENT;
+	un->entry  = entry;
+	un->active = entry->active;
+
+	entry_set(entry, cmd, active);
+
+	re->cmd    = strdup(cmd);
+	re->type   = CHANGE_TYPE_CONTENT;
+	re->entry  = entry;
+	re->active = active;
+	
+	as->undo_index = un;
+	as->redo_index = re;
+	
+	return (0);
+}
+
+void
+dsbautostart_del_entry(dsbautostart_t *as, entry_t *entry)
+{
+	change_history_t *re, *un;
+
+	re = hist_add(&as->redo_head, &as->redo_index);
+	un = hist_add(&as->undo_head, &as->undo_index);
+
+	un->type   = CHANGE_TYPE_DELETE;
+	un->entry  = entry;
+	un->eprev  = entry->prev;
+	un->enext  = entry->next;
+
+	re->type   = CHANGE_TYPE_DELETE;
+	re->entry  = entry;
+	re->eprev  = entry->prev;
+	re->enext  = entry->next;
+
+	as->redo_index = re;
+	as->undo_index = un;
+
+	entry_del(as, entry);
+}
+
+entry_t *
+dsbautostart_add_entry(dsbautostart_t *as, const char *cmd, bool active)
+{
+	entry_t *entry = entry_add(as, cmd, active);
+	change_history_t *re, *un;
+
+	re = hist_add(&as->redo_head, &as->redo_index);
+	un = hist_add(&as->undo_head, &as->undo_index);
+
+	un->type   = CHANGE_TYPE_ADD;
+	un->entry  = entry;
+	un->eprev  = entry->prev;
+	un->enext  = entry->next;
+
+	re->type   = CHANGE_TYPE_ADD;
+	re->entry  = entry;
+	re->eprev  = entry->prev;
+	re->enext  = entry->next;
+	as->redo_index = re;
+	as->undo_index = un;
+
+	return (entry);
+}
+
+void
+dsbautostart_entry_move_up(dsbautostart_t *as, entry_t *entry)
+{
+	change_history_t *re, *un;
+
+	re = hist_add(&as->redo_head, &as->redo_index);
+	un = hist_add(&as->undo_head, &as->undo_index);
+
+	un->type  = CHANGE_TYPE_MOVE_UP;
+	un->entry = entry;
+
+	re->type  = CHANGE_TYPE_MOVE_UP;
+	re->entry = entry;
+
+	as->redo_index = re;
+	as->undo_index = un;
+
+	entry_move_up(as, entry);
+}
+
+void
+dsbautostart_entry_move_down(dsbautostart_t *as, entry_t *entry)
+{
+	change_history_t *re, *un;
+
+	re = hist_add(&as->redo_head, &as->redo_index);
+	un = hist_add(&as->undo_head, &as->undo_index);
+
+	un->type  = CHANGE_TYPE_MOVE_DOWN;
+	un->entry = entry;
+
+	re->type  = CHANGE_TYPE_MOVE_DOWN;
+	re->entry = entry;
+
+	as->redo_index = re;
+	as->undo_index = un;
+
+	entry_move_down(as, entry);
+}
+
+dsbautostart_t *
+dsbautostart_copy(dsbautostart_t *as)
+{
+	dsbautostart_t *cp;
+	entry_t *entry;
+
+	cp = malloc(sizeof(dsbautostart_t));
+	cp->undo_head = cp->redo_head = NULL;
+	cp->undo_index = cp->redo_index = NULL;
+	cp->entry = NULL;
+	for (entry = as->entry; entry != NULL; entry = entry->next) {
+		if (entry_add(cp, entry->cmd, entry->active) == NULL)
+			return (NULL);
+	}
+	return (cp);
+}
+
+bool
+dsbautostart_cmp(dsbautostart_t *l0, dsbautostart_t *l1)
+{
+	entry_t *e0, *e1;
+
+	e0 = l0->entry; e1 = l1->entry;
+	for (; e0 != NULL && e1 != NULL; e0 = e0->next, e1 = e1->next) {
+		if (e0->active != e1->active)
+			return (false);
+		if (strcmp(e0->cmd, e1->cmd) != 0)
+			return (false);
+	}
+	if (e0 != NULL || e1 != NULL)
+		return (false);
+	return (true);
+}
+
+bool
+dsbautostart_can_undo(dsbautostart_t *as)
+{
+	return (as->undo_index == NULL ? false : true);
+}
+
+bool
+dsbautostart_can_redo(dsbautostart_t *as)
+{
+	if (as->redo_head == NULL)
+		return (false);
+	if (as->redo_index != NULL && as->redo_index->next == NULL) {
+		return (false);
+	}
+	return (true);
+}
+
+void
+dsbautostart_free(dsbautostart_t *as)
+{
+	entry_t *entry, *next;
+
+	for (entry = as->entry; entry != NULL; entry = next) {
+		free(entry->cmd); next = entry->next;
+		free(entry);
+	}
+	free(as);
+}
+
+void
+dsbautostart_undo(dsbautostart_t *as)
+{
+	change_history_t *h;
+
+	if (as->undo_index == NULL)
+		return;
+	h = as->undo_index;
+	switch (h->type) {
+	case CHANGE_TYPE_CONTENT:
+		entry_set(h->entry, h->cmd, h->active);
+		break;
+	case CHANGE_TYPE_DELETE:
+		insert_entry(as, h->entry, h->eprev, h->enext);
+		break;
+	case CHANGE_TYPE_ADD:
+		entry_del(as, h->entry);
+		break;
+	case CHANGE_TYPE_MOVE_UP:
+		entry_move_down(as, h->entry);
+		break;
+	case CHANGE_TYPE_MOVE_DOWN:
+		entry_move_up(as, h->entry);
+		break;
+	}
+	/* Go up one entry in history. */
+	as->undo_index = as->undo_index->prev;
+	as->redo_index = as->redo_index->prev;
+}
+
+void
+dsbautostart_redo(dsbautostart_t *as)
+{
+	change_history_t *h;
+
+	/* hist is the pointer to the current change */
+	if (as->redo_head == NULL)
+		/* Nothing to redo */
+		return;
+	if (as->redo_index == NULL)
+		as->redo_index = h = as->redo_head;
+	else if (as->redo_index->next == NULL)
+		return;
+	else
+		h = as->redo_index = as->redo_index->next;
+	switch (h->type) {
+	case CHANGE_TYPE_CONTENT:
+		puts("CONTENT");
+		entry_set(h->entry, h->cmd, h->active);
+		break;
+	case CHANGE_TYPE_DELETE:
+		entry_del(as, h->entry);
+		break;
+	case CHANGE_TYPE_ADD:
+		insert_entry(as, h->entry, h->eprev, h->enext);
+		break;
+	case CHANGE_TYPE_MOVE_UP:
+		entry_move_up(as, h->entry);
+		break;
+	case CHANGE_TYPE_MOVE_DOWN:
+		entry_move_down(as, h->entry);
+		break;
+	}
+	if (as->undo_index == NULL)
+		as->undo_index = as->undo_head;
+	else
+		as->undo_index = as->undo_index->next;
+}
+
+/*
+ * Add a new change_history_t object to the given history, and
+ * return a pointer to it. 
+ */
+static change_history_t *
+hist_add(change_history_t **head, change_history_t **idx)
+{
+	change_history_t *hist;
+
+	hist = malloc(sizeof(change_history_t));
+	hist->next = hist->prev = NULL;
+	if (*idx == NULL) {
+		if (*head != NULL) {
+			(*head)->prev = hist;
+			(*head)->next = *head;
+			*head = hist;
+		} else
+			*head = hist;
+	} else {
+		if ((*idx)->next != NULL)
+			(*idx)->next->prev = hist;
+		hist->prev = *idx;
+		hist->next = (*idx)->next;
+		(*idx)->next = hist;
+	}
+	*idx = hist;
+
+	return (hist);
+}
+
+/*
+ * Re-insert deleted entry
+ */
+static void
+insert_entry(dsbautostart_t *as, entry_t *entry, entry_t *prev, entry_t *next)
+{
+	if (as == NULL || entry == NULL)
+		return;
+	if (prev == NULL)
+		as->entry = entry;
+	else
+		prev->next = entry;
+	if (next != NULL)
+		next->prev = entry;
+	entry->prev = prev;
+	entry->next = next;
+}
+
+static void
+entry_del(dsbautostart_t *as, entry_t *entry)
+{
+	if (entry == NULL || as == NULL)
+		return;
+	if (entry == as->entry) {
+		if (entry->next != NULL)
+			entry->next->prev = NULL;
+		as->entry = entry->next;
+		entry->prev = NULL;
+	} else if (entry->next == NULL) {
+		entry->prev->next = NULL;
+	} else {
+		entry->prev->next = entry->next;
+		entry->next->prev = entry->prev;
+	}
+}
+
+static int
+entry_set(entry_t *entry, const char *cmd, bool active)
 {
 	if (entry == NULL)
 		return (0);
@@ -237,37 +564,20 @@ dsbautostart_set(dsbautostart_t *entry, const char *cmd, bool active)
 	return (0);
 }
 
-void
-dsbautostart_del_entry(dsbautostart_t **list, dsbautostart_t *entry)
+static entry_t *
+entry_add(dsbautostart_t *as, const char *cmd, bool active)
 {
-	if (entry == NULL || list == NULL || *list == NULL)
-		return;
-	if (entry == *list) {
-		if (entry->next != NULL)
-			entry->next->prev = NULL;
-		*list = entry->next;
-	} else if (entry->next == NULL) {
-		entry->prev->next = NULL;
-	} else {
-		entry->prev->next = entry->next;
-		entry->next->prev = entry->prev;
-	}
-	free(entry->cmd); free(entry);
-}
-
-dsbautostart_t *
-dsbautostart_add_entry(dsbautostart_t **as, const char *cmd, bool active)
-{
-	dsbautostart_t *p, *tail;
+	entry_t *p, *tail;
 
 	_clearerr();
 
-	for (tail = *as; tail != NULL && tail->next != NULL; tail = tail->next)
+	for (tail = as->entry; tail != NULL && tail->next != NULL;
+	    tail = tail->next)
 		;
-	if ((p = malloc(sizeof(dsbautostart_t))) == NULL)
+	if ((p = malloc(sizeof(entry_t))) == NULL)
 		ERROR(NULL, "malloc()");
 	if (tail == NULL) {
-		*as = p;
+		as->entry = p;
 		p->next = p->prev = NULL;
 	} else {
 		p->next = NULL;
@@ -282,16 +592,16 @@ dsbautostart_add_entry(dsbautostart_t **as, const char *cmd, bool active)
 	return (p);
 }
 
-void
-dsbautostart_item_move_up(dsbautostart_t **head, dsbautostart_t *as)
+static void
+entry_move_up(dsbautostart_t *as, entry_t *entry)
 {
-	dsbautostart_t *a, *b;
+	entry_t *a, *b;
 
-	if (as == NULL || as->prev == NULL)
+	if (entry == NULL || entry->prev == NULL)
 		return;
-	a = as->prev; b = as;
+	a = entry->prev; b = entry;
 	if (a->prev == NULL)
-		*head = b;
+		as->entry = b;
 	else
 		a->prev->next = b;
 	if (b->next != NULL)
@@ -302,50 +612,11 @@ dsbautostart_item_move_up(dsbautostart_t **head, dsbautostart_t *as)
 	a->prev = b;
 }
 
-void
-dsbautostart_item_move_down(dsbautostart_t **head, dsbautostart_t *as)
+static void
+entry_move_down(dsbautostart_t *as, entry_t *entry)
 {
-	if (as == NULL || as->next == NULL)
+	if (entry == NULL || entry->next == NULL)
 		return;
-	dsbautostart_item_move_up(head, as->next);
-}
-
-dsbautostart_t *
-dsbautostart_copy(dsbautostart_t *list)
-{
-	dsbautostart_t *cp = NULL;
-
-	for (; list != NULL; list = list->next) {
-		if (dsbautostart_add_entry(&cp, list->cmd,
-		    list->active) == NULL)
-			return (NULL);
-	}
-	return (cp);
-}
-
-bool
-dsbautostart_cmp(dsbautostart_t *l0, dsbautostart_t *l1)
-{
-
-	for (; l0 != NULL && l1 != NULL; l0 = l0->next, l1 = l1->next) {
-		if (l0->active != l1->active)
-			return (false);
-		if (strcmp(l0->cmd, l1->cmd) != 0)
-			return (false);
-	}
-	if (l0 != NULL || l1 != NULL)
-		return (false);
-	return (true);
-}
-
-void
-dsbautostart_free(dsbautostart_t *list)
-{
-	dsbautostart_t *entry, *next;
-
-	for (entry = list; entry != NULL; entry = next) {
-		free(entry->cmd); next = entry->next;
-		free(entry);
-	}
+	entry_move_up(as, entry->next);
 }
 
