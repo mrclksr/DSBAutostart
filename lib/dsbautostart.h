@@ -32,24 +32,55 @@ extern "C" {
 
 #define PATH_ASFILE "autostart.sh"
 
+typedef struct entry_s {
+	char   *cmd;
+	bool   active;
+	struct entry_s *next;
+	struct entry_s *prev;
+} entry_t;
+
+/*
+ * Struct to track changes for a undo/redo history queue.
+ */
+typedef struct change_history_s {
+	char	type;		/* Type of change the entry was modified */
+#define CHANGE_TYPE_ADD	      1
+#define CHANGE_TYPE_DELETE    2
+#define CHANGE_TYPE_CONTENT   3
+#define CHANGE_TYPE_MOVE_UP   4
+#define CHANGE_TYPE_MOVE_DOWN 5
+	bool	active;		/* Previous/current activation status */
+	char	*cmd;		/* Previous/current current command string */
+	entry_t	*entry;		/* Pointer to entry from dsbautostart_t */
+	entry_t *eprev, *enext;	/* Previous and next entry of this entry */
+	struct change_history_s *prev;
+	struct change_history_s *next;
+} change_history_t;
+
 typedef struct dsbautostart_s {
-	char *cmd;
-	bool active;
-	struct dsbautostart_s *next;
-	struct dsbautostart_s *prev;
+	entry_t		 *entry;
+	change_history_t *undo_head;
+	change_history_t *redo_head;
+	change_history_t *undo_index; /* Current index of undo queue */
+	change_history_t *redo_index; /* Current index of redo queue */
 } dsbautostart_t;
 
-int		dsbautostart_set(dsbautostart_t *, const char *, bool);
+int		dsbautostart_set(dsbautostart_t *, entry_t *, const char *,
+		    bool);
 int		dsbautostart_write(dsbautostart_t *);
-void		dsbautostart_del_entry(dsbautostart_t **, dsbautostart_t *);
+void		dsbautostart_undo(dsbautostart_t *);
+void		dsbautostart_redo(dsbautostart_t *);
+void		dsbautostart_del_entry(dsbautostart_t *, entry_t *);
 void		dsbautostart_free(dsbautostart_t *);
-void		dsbautostart_item_move_up(dsbautostart_t **, dsbautostart_t *);
-void		dsbautostart_item_move_down(dsbautostart_t **, dsbautostart_t *);
+void		dsbautostart_entry_move_up(dsbautostart_t *, entry_t *);
+void		dsbautostart_entry_move_down(dsbautostart_t *, entry_t *);
 bool		dsbautostart_error(void);
-bool		dsbautostart_cmp(dsbautostart_t *l0, dsbautostart_t *l1);
+bool		dsbautostart_cmp(dsbautostart_t *, dsbautostart_t *);
+bool		dsbautostart_can_undo(dsbautostart_t *);
+bool		dsbautostart_can_redo(dsbautostart_t *);
 const char	*dsbautostart_strerror(void);
+entry_t		*dsbautostart_add_entry(dsbautostart_t *, const char *, bool);
 dsbautostart_t *dsbautostart_read(void);
-dsbautostart_t *dsbautostart_add_entry(dsbautostart_t **, const char *, bool);
 dsbautostart_t *dsbautostart_copy(dsbautostart_t *);
 #ifdef __cplusplus
 }
