@@ -186,7 +186,7 @@ dsbautostart_read()
 	as->redo_head = as->undo_head = as->redo_index = as->undo_index = NULL;
 	as->entry = NULL;
 	if ((fp = open_asfile()) == NULL)
-		return (NULL);
+		return (error ? NULL : as);
 	while ((p = readln(fp)) != NULL) {
 		if (strncmp(p, "#[INACTIVE]#", 12) == 0) {
 			active = false;
