@@ -38,7 +38,8 @@ Mainwin::Mainwin(QWidget *parent) :
 		}
 	}
 	QWidget *container = new QWidget();
-
+	if (cmdlist == NULL)
+		qh_errx(this, EXIT_FAILURE, "%s", dsbautostart_strerror());
 	list = new List(cmdlist, this);
 	connect(list, SIGNAL(listModified(bool)), this,
 	    SLOT(catchListModified(bool)));
