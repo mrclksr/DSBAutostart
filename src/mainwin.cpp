@@ -50,37 +50,50 @@ Mainwin::Mainwin(QWidget *parent) :
 	QVBoxLayout *bvbox = new QVBoxLayout;
 
 	icon = qh_loadIcon("edit-undo", NULL);
+	if (icon.isNull())
+		icon = qh_loadStockIcon(QStyle::SP_ArrowLeft);
 	undo  = new QPushButton(icon, tr("&Undo"), this);
 	undo->setStyleSheet("text-align: left"); 
 	undo->setEnabled(list->canUndo());
 
 	icon = qh_loadIcon("edit-redo", NULL);
+	if (icon.isNull())
+		icon = qh_loadStockIcon(QStyle::SP_ArrowRight);
 	redo  = new QPushButton(icon, tr("&Redo"), this);
 	redo->setStyleSheet("text-align: left"); 
 	redo->setEnabled(list->canRedo());
 
 	icon = qh_loadIcon("list-add", NULL);
+	if (icon.isNull())
+		icon = qh_loadStockIcon(QStyle::SP_FileDialogNewFolder);
 	QPushButton *add  = new QPushButton(icon, tr("&Add"), this);
 	add->setStyleSheet("text-align: left"); 
 
 	icon = qh_loadIcon("edit-delete", NULL);
+	if (icon.isNull())
+		icon = qh_loadStockIcon(QStyle::SP_TrashIcon);
 	QPushButton *del  = new QPushButton(icon, tr("&Delete"), this);
 	del->setStyleSheet("text-align: left"); 
 
 	icon = qh_loadIcon("go-up", NULL);
+	if (icon.isNull())
+		icon = qh_loadStockIcon(QStyle::SP_ArrowUp);
 	QPushButton *up   = new QPushButton(icon, tr("&Up"), this);
 	up->setStyleSheet("text-align: left"); 
 
 	icon = qh_loadIcon("go-down", NULL);
+	if (icon.isNull())
+		icon = qh_loadStockIcon(QStyle::SP_ArrowDown);
 	QPushButton *down = new QPushButton(icon, tr("Dow&n"), this);
 	down->setStyleSheet("text-align: left"); 
 
-	connect(up,	SIGNAL(clicked()), this, SLOT(upClicked()));
-	connect(del,	SIGNAL(clicked()), this, SLOT(delClicked()));
-	connect(add,	SIGNAL(clicked()), this, SLOT(addClicked()));
-	connect(down,	SIGNAL(clicked()), this, SLOT(downClicked()));
-	connect(undo,	SIGNAL(clicked()), this, SLOT(undoClicked()));
-	connect(redo,	SIGNAL(clicked()), this, SLOT(redoClicked()));
+	connect(up,   SIGNAL(clicked()), this, SLOT(upClicked()));
+	connect(del,  SIGNAL(clicked()), this, SLOT(delClicked()));
+	connect(add,  SIGNAL(clicked()), this, SLOT(addClicked()));
+	connect(down, SIGNAL(clicked()), this, SLOT(downClicked()));
+	connect(undo, SIGNAL(clicked()), this, SLOT(undoClicked()));
+	connect(redo, SIGNAL(clicked()), this, SLOT(redoClicked()));
+
 	bvbox->addStretch(1);
 	bvbox->addWidget(undo, 1, 0);
 	bvbox->addWidget(redo, 1, 0);
@@ -94,7 +107,9 @@ Mainwin::Mainwin(QWidget *parent) :
 	hbox->addWidget(list);
 	hbox->addLayout(bvbox);
 
-	icon = qh_loadIcon("document-save", QStyle::SP_DialogSaveButton, NULL);
+	icon = qh_loadIcon("document-save", NULL);
+	if (icon.isNull())
+		icon = qh_loadStockIcon(QStyle::SP_DialogSaveButton);
 	QPushButton *save = new QPushButton(icon, tr("&Save"), this);
 	icon = qh_loadStockIcon(QStyle::SP_DialogCloseButton);
 	QPushButton *quit = new QPushButton(icon, tr("&Quit"), this);
@@ -117,8 +132,7 @@ Mainwin::Mainwin(QWidget *parent) :
 	setCentralWidget(container);
 	setWindowTitle("DSBAutostart");
 	setMinimumSize(500, 300);
-	setWindowIcon(qh_loadThemeIcon(QString("system-run")));
-
+	setWindowIcon(qh_loadIcon("system-run", NULL));
 }
 
 void
