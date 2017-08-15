@@ -47,6 +47,7 @@ qh_loadIcon(const char *name, ...)
 	va_list	   ap;
 	const char *s;
 
+	va_start(ap, name);
 	for (s = name; s != NULL || (s = va_arg(ap, char *)); s = NULL) {
 		if (!QIcon::hasThemeIcon(s))
 			continue;
