@@ -321,6 +321,8 @@ dsbautostart_entry_move_up(dsbautostart_t *as, entry_t *entry)
 {
 	change_history_t *re, *un;
 
+	if (entry == NULL || entry->prev == NULL)
+		return (entry);
 	if ((re = hist_add(&as->redo_head, &as->redo_index)) == NULL ||
 	    (un = hist_add(&as->undo_head, &as->undo_index)) == NULL)
 		return (NULL);
@@ -343,6 +345,8 @@ dsbautostart_entry_move_down(dsbautostart_t *as, entry_t *entry)
 {
 	change_history_t *re, *un;
 
+	if (entry == NULL || entry->next == NULL)
+		return (entry);
 	if ((re = hist_add(&as->redo_head, &as->redo_index)) == NULL ||
 	    (un = hist_add(&as->undo_head, &as->undo_index)) == NULL)
 		return (NULL);
