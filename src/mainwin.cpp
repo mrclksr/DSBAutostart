@@ -27,6 +27,8 @@
 #include "mainwin.h"
 #include "qt-helper/qt-helper.h"
 
+#define PB_STYLE "padding: 2px; text-align: left;"
+
 Mainwin::Mainwin(QWidget *parent) : 
     QMainWindow(parent) {
 	QIcon icon;
@@ -53,39 +55,37 @@ Mainwin::Mainwin(QWidget *parent) :
 	if (icon.isNull())
 		icon = qh_loadStockIcon(QStyle::SP_ArrowLeft);
 	undo  = new QPushButton(icon, tr("&Undo"), this);
-	undo->setStyleSheet("text-align: left"); 
+	undo->setStyleSheet(PB_STYLE);
+
 	undo->setEnabled(list->canUndo());
 
 	icon = qh_loadIcon("edit-redo", NULL);
 	if (icon.isNull())
 		icon = qh_loadStockIcon(QStyle::SP_ArrowRight);
 	redo  = new QPushButton(icon, tr("&Redo"), this);
-	redo->setStyleSheet("text-align: left"); 
+	redo->setStyleSheet(PB_STYLE);
 	redo->setEnabled(list->canRedo());
 
 	icon = qh_loadIcon("list-add", NULL);
 	if (icon.isNull())
 		icon = qh_loadStockIcon(QStyle::SP_FileDialogNewFolder);
 	QPushButton *add  = new QPushButton(icon, tr("&Add"), this);
-	add->setStyleSheet("text-align: left"); 
-
+	add->setStyleSheet(PB_STYLE);
 	icon = qh_loadIcon("edit-delete", NULL);
 	if (icon.isNull())
 		icon = qh_loadStockIcon(QStyle::SP_TrashIcon);
 	QPushButton *del  = new QPushButton(icon, tr("&Delete"), this);
-	del->setStyleSheet("text-align: left"); 
-
+	del->setStyleSheet(PB_STYLE);
 	icon = qh_loadIcon("go-up", NULL);
 	if (icon.isNull())
 		icon = qh_loadStockIcon(QStyle::SP_ArrowUp);
 	QPushButton *up   = new QPushButton(icon, tr("&Up"), this);
-	up->setStyleSheet("text-align: left"); 
-
+	up->setStyleSheet(PB_STYLE);
 	icon = qh_loadIcon("go-down", NULL);
 	if (icon.isNull())
 		icon = qh_loadStockIcon(QStyle::SP_ArrowDown);
 	QPushButton *down = new QPushButton(icon, tr("Dow&n"), this);
-	down->setStyleSheet("text-align: left"); 
+	down->setStyleSheet(PB_STYLE);
 
 	connect(up,   SIGNAL(clicked()), this, SLOT(upClicked()));
 	connect(del,  SIGNAL(clicked()), this, SLOT(delClicked()));
