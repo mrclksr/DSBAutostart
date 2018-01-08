@@ -127,6 +127,8 @@ Mainwin::Mainwin(QWidget *parent) :
 	vbox->addWidget(label, 0, Qt::AlignCenter);
 	vbox->addLayout(hbox);
 	vbox->addLayout(bhbox);
+	vbox->setContentsMargins(15, 15, 15, 15);
+
 	statusBar()->showMessage("");
 	container->setLayout(vbox);
 	setCentralWidget(container);
