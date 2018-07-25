@@ -1,0 +1,29 @@
+.Dd $Mdocdate$
+.Dt DSBAutostart
+.Sh ABOUT
+.Nm DSBAutostart
+is a Qt program that allows you to add commands to be executed at session start.
+.Sh INSTALLATION
+.Ss Dependencies
+.Nm
+depends on
+.Em devel/qt5-buildtools , devel/qt5-core , devel/qt5-linguisttools ,
+.Em devel/qt5-qmake , x11-toolkits/qt5-gui ,
+and
+.Em x11-toolkits/qt5-widgets
+.Ss Getting the source code
+.Bd -literal -offset indent
+# git clone https://github.com/mrclksr/DSBAutostart.git
+# git clone https://github.com/mrclksr/dsbcfg.git
+.Ss Building and installation
+.Bd -literal -offset indent
+# cd DSBAutostart && qmake && make
+# make install
+.Ed
+.Sh SETUP
+Add the following command to your ~/.xinitrc, or to your window manager's
+startup script (e.g. ~/.config/openbox/autostart.sh):
+.Bd -literal -offset indet
+sh ~/.config/DSB/autostart.sh&
+.Ed
+
