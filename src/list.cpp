@@ -49,6 +49,8 @@ List::List(dsbautostart_t *as, QWidget *parent)
 	_modified = false;
 	connect(list, SIGNAL(itemChanged(QListWidgetItem *)), this,
 	    SLOT(catchItemChanged(QListWidgetItem *)));
+	connect(list, SIGNAL(itemDoubleClicked(QListWidgetItem *)), this,
+	    SLOT(catchDoubleClicked(QListWidgetItem *)));
 }
 
 bool
@@ -77,11 +79,12 @@ List::newItem()
 
 	if (entry == NULL)
 		qh_errx(this, EXIT_FAILURE, "%s", dsbautostart_strerror());
-	List::addItem(entry);
+	QListWidgetItem *item = List::addItem(entry);
+	list->editItem(item);
 	compare();
 }
 
-void
+QListWidgetItem *
 List::addItem(entry_t *entry)
 {
 	QListWidgetItem *item = new QListWidgetItem(entry->cmd);
@@ -90,8 +93,9 @@ List::addItem(entry_t *entry)
 	item->setCheckState(entry->active ? Qt::Checked : Qt::Unchecked);
 	item->setData(Qt::UserRole, qVariantFromValue((void *)entry));
 	list->addItem(item);
-	list->setCurrentItem(item);
 	items.append(item);
+
+	return (item);
 }
 
 void
@@ -99,6 +103,13 @@ List::catchItemChanged(QListWidgetItem *item)
 {
 	updateItem(item);
 	compare();
+}
+
+void
+List::catchDoubleClicked(QListWidgetItem *item)
+{
+	list->editItem(item);
+	list->setCurrentItem(item, QItemSelectionModel::Deselect);
 }
 
 void

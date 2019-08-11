@@ -35,7 +35,7 @@ Q_OBJECT
 
 public:
 	List(dsbautostart_t *as, QWidget *parent = 0);
-	void addItem(entry_t *entry);
+	QListWidgetItem *addItem(entry_t *entry);
 	void moveItemUp();
 	void moveItemDown();
 	void newItem();
@@ -51,6 +51,7 @@ signals:
 	void listModified(bool);
 private slots:
 	void catchItemChanged(QListWidgetItem *item);
+	void catchDoubleClicked(QListWidgetItem *item);
 private:
 	void compare();
 private:
