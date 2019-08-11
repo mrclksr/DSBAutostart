@@ -29,6 +29,7 @@
 #include <QWidget>
 #include <QObject>
 #include "lib/dsbautostart.h"
+#include "listwidget.h"
 
 class List : public QWidget {
 Q_OBJECT
@@ -39,7 +40,6 @@ public:
 	void moveItemUp();
 	void moveItemDown();
 	void newItem();
-	void delItem();
 	void update();
 	void undo();
 	void redo();
@@ -47,18 +47,20 @@ public:
 	bool canUndo();
 	bool canRedo();
 	void unsetModified();
+public slots:
+	void delItem();
 signals:
 	void listModified(bool);
 private slots:
 	void catchItemChanged(QListWidgetItem *item);
 	void catchDoubleClicked(QListWidgetItem *item);
+	void addDesktopFiles(QStringList &list);
 private:
 	void compare();
 private:
 	bool _modified;
 	dsbautostart_t *as, *ascp;
 	QList<QListWidgetItem *> items;
-	QListWidget *list;
+	ListWidget *list;
 	void updateItem(QListWidgetItem *item);
 };
-

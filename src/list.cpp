@@ -23,13 +23,15 @@
  */
 
 #include <QVBoxLayout>
+
 #include "list.h"
+#include "desktopfile.h"
 #include "qt-helper/qt-helper.h"
 
 List::List(dsbautostart_t *as, QWidget *parent)
 	: QWidget(parent) {
 	
-	list = new QListWidget();
+	list = new ListWidget(parent);
 	list->setMouseTracking(true);
 	this->as = as;
 
@@ -51,6 +53,9 @@ List::List(dsbautostart_t *as, QWidget *parent)
 	    SLOT(catchItemChanged(QListWidgetItem *)));
 	connect(list, SIGNAL(itemDoubleClicked(QListWidgetItem *)), this,
 	    SLOT(catchDoubleClicked(QListWidgetItem *)));
+	connect(list, SIGNAL(itemDroped(QStringList &)), this,
+	    SLOT(addDesktopFiles(QStringList &)));
+	connect(list, SIGNAL(deleteKeyPressed()), this, SLOT(delItem()));
 }
 
 bool
@@ -239,3 +244,21 @@ List::compare()
 	}
 }
 
+void
+List::addDesktopFiles(QStringList &list)
+{
+	entry_t *entry;
+
+	for (QString s : list) {
+		DesktopFile df(s);
+		if (df.read() == -1)
+			continue;
+		entry = dsbautostart_add_entry(as, df.cmd.toLocal8Bit().data(), true);
+		if (entry == NULL) {
+			qh_errx(this, EXIT_FAILURE, "%s",
+			    dsbautostart_strerror());
+		}
+		List::addItem(entry);
+	}
+	compare();
+}

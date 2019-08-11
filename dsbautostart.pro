@@ -27,14 +27,18 @@ desktopfile.path  = $${APPSDIR}
 desktopfile.files = $${PROGRAM}.desktop
 
 HEADERS += src/list.h \
+	   src/listwidget.h \
            src/mainwin.h \
-           lib/dsbautostart.h \
+	   src/desktopfile.h \
+	   lib/dsbautostart.h \
            lib/qt-helper/qt-helper.h \
            lib/dsbcfg/dsbcfg.h
 SOURCES += src/list.cpp \
+	   src/listwidget.cpp \
            src/main.cpp \
            src/mainwin.cpp \
-           lib/dsbautostart.c \
+	   src/desktopfile.cpp \
+	   lib/dsbautostart.c \
            lib/qt-helper/qt-helper.cpp \
            lib/dsbcfg/dsbcfg.c
 
