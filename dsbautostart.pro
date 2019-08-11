@@ -13,7 +13,7 @@ TEMPLATE     = app
 TARGET	     = $${PROGRAM}
 DEPENDPATH  += . lib qt-helper
 INCLUDEPATH += . lib qt-helper
-LANGUAGES    = de
+TRANSLATIONS = locale/dsbautostart_de.ts
 APPSDIR	     = $${PREFIX}/share/applications
 DEFINES	    += PROGRAM=\\\"$${PROGRAM}\\\" LOCALE_PATH=\\\"$${DATADIR}\\\"
 INSTALLS     = target locales desktopfile
@@ -58,13 +58,12 @@ readmemd.commands = mandoc -mdoc -Tmarkdown readme.mdoc | \
 			sed -e \'1,1d; \$$,\$$d\' > README.md
 
 qtPrepareTool(LRELEASE, lrelease)
-for(a, LANGUAGES) {
-	in = locale/$${PROGRAM}_$${a}.ts
-	out = locale/$${PROGRAM}_$${a}.qm
-	locales.files += $$out
-	cmd = $$LRELEASE $$in -qm $$out
+for(a, TRANSLATIONS) {
+	cmd = $$LRELEASE $${a}
 	system($$cmd)
 }
+locales.files += locale/*.qm
+
 cleanqm.commands  = rm -f $${locales.files}
 distclean.depends = cleanqm
 
