@@ -44,7 +44,7 @@
     <message>
         <location filename="../src/mainwin.cpp" line="87"/>
         <source>Dow&amp;n</source>
-        <translation>&amp;Runter</translation>
+        <translation>R&amp;unter</translation>
     </message>
     <message>
         <location filename="../src/mainwin.cpp" line="113"/>
