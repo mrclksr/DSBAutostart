@@ -4,9 +4,17 @@
 <context>
     <name>List</name>
     <message>
-        <location filename="../src/list.cpp" line="41"/>
         <source>Double click to edit. Use checkbox to activate/deactivate command</source>
-        <translation>Doppelklick zum Editieren. Checkbox zum aktivieren/deaktivieren des Befehls</translation>
+        <translation type="vanished">Doppelklick zum Editieren. Checkbox zum aktivieren/deaktivieren des Befehls</translation>
+    </message>
+    <message>
+        <location filename="../src/list.cpp" line="41"/>
+        <source>Double click to edit.
+Use checkbox to activate/deactivate a command.
+Use Drag &amp; Drop to add desktop files.</source>
+        <translation>Doppleklick zum Editieren
+Benutzen Sie die Checkbox zum Aktivieren/Deaktivieren des Befehls.
+Benutzen Sie Drag &amp; Drop, um Desktopdateien hinzuzufügen.</translation>
     </message>
 </context>
 <context>

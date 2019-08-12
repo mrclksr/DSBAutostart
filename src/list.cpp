@@ -38,8 +38,9 @@ List::List(dsbautostart_t *as, QWidget *parent)
 	QVBoxLayout *vbox = new QVBoxLayout;
 	vbox->addWidget(list);
 	setLayout(vbox);
-	list->setToolTip(QString(tr("Double click to edit. Use checkbox to " \
-	    "activate/deactivate command")));
+	list->setToolTip(QString(tr("Double click to edit.\n" \
+	    "Use checkbox to activate/deactivate a command.\n" \
+	    "Use Drag & Drop to add desktop files.")));
 	if ((ascp = dsbautostart_copy(as)) == NULL) {
 		if (dsbautostart_error()) {
 			qh_err(this, EXIT_FAILURE, "%s",
