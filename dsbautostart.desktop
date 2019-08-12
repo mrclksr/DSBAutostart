@@ -5,5 +5,4 @@ Icon=system-run
 Terminal=false
 StartupNotify=false
 Type=Application
-Categories=Settings;System;Utility;Application
-
+Categories=Settings;DesktopSettings;
