@@ -1,5 +1,6 @@
 [Desktop Entry]
-Name=DSBAutostart
+Name=Autostart Settings
+Name[de]=Autostart-Einstellungen
 Exec=dsbautostart
 Icon=system-run
 Terminal=false
