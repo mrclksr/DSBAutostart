@@ -13,7 +13,8 @@ TEMPLATE     = app
 TARGET	     = $${PROGRAM}
 DEPENDPATH  += . lib qt-helper
 INCLUDEPATH += . lib qt-helper
-TRANSLATIONS = locale/dsbautostart_de.ts
+TRANSLATIONS = locale/dsbautostart_de.ts \
+               locale/dsbautostart_fr.ts
 APPSDIR	     = $${PREFIX}/share/applications
 DEFINES	    += PROGRAM=\\\"$${PROGRAM}\\\" LOCALE_PATH=\\\"$${DATADIR}\\\"
 INSTALLS     = target locales desktopfile
