@@ -24,108 +24,101 @@
 
 #include <QMessageBox>
 #include <QCloseEvent>
+
 #include "mainwin.h"
+#include "editwin.h"
 #include "qt-helper/qt-helper.h"
 
 #define PB_STYLE "padding: 2px; text-align: left;"
 
 Mainwin::Mainwin(QWidget *parent) : 
     QMainWindow(parent) {
-	QIcon icon;
-
-	if ((cmdlist = dsbautostart_read()) == NULL) {
+	if ((cmdlist = dsbautostart_init()) == NULL) {
 		if (dsbautostart_error()) {
-			qh_errx(parent, EXIT_FAILURE, "dsbautostart_read(): %s",
+			qh_errx(parent, EXIT_FAILURE, "dsbautostart_init(): %s",
 			    dsbautostart_strerror());
 		}
 	}
+	QIcon editIcon	   = qh_loadIcon("edit", NULL);
+	QIcon addIcon	   = qh_loadIcon("list-add", NULL);
+	QIcon delIcon	   = qh_loadIcon("edit-delete", NULL);
+	QIcon undoIcon	   = qh_loadIcon("edit-undo", NULL);
+	QIcon redoIcon	   = qh_loadIcon("edit-redo", NULL);
+	QIcon saveIcon	   = qh_loadIcon("document-save", NULL);
+	QIcon quitIcon	   = qh_loadStockIcon(QStyle::SP_DialogCloseButton);
+	if (undoIcon.isNull())
+		undoIcon = qh_loadStockIcon(QStyle::SP_ArrowLeft);
+	if (addIcon.isNull())
+		addIcon = qh_loadStockIcon(QStyle::SP_FileDialogNewFolder);
+	if (editIcon.isNull())
+		editIcon = qh_loadStockIcon(QStyle::SP_ArrowRight);
+	if (delIcon.isNull())
+		delIcon = qh_loadStockIcon(QStyle::SP_TrashIcon);
+	if (saveIcon.isNull())
+		saveIcon = qh_loadStockIcon(QStyle::SP_DialogSaveButton);
+
+	list		   = new List(cmdlist, this);
+	redo		   = new QPushButton(redoIcon, tr("&Redo"), this);
+	undo		   = new QPushButton(undoIcon, tr("&Undo"), this);
+	show_all_cb	   = new QCheckBox(tr("Show all"));
 	QWidget *container = new QWidget();
-	if (cmdlist == NULL)
-		qh_errx(this, EXIT_FAILURE, "%s", dsbautostart_strerror());
-	list = new List(cmdlist, this);
-	connect(list, SIGNAL(listModified(bool)), this,
-	    SLOT(catchListModified(bool)));
-
-	QLabel *label = new QLabel(tr("Add commands to be executed at " \
-	    "session start"));
-
+	QLabel *label	   = new QLabel(tr("Add commands to be executed at " \
+					"session start"));
+	QPushButton *add   = new QPushButton(addIcon,  tr("&New"),    this);
+	QPushButton *del   = new QPushButton(delIcon,  tr("&Delete"), this);
+	QPushButton *edit  = new QPushButton(editIcon, tr("&Edit"),   this);
+	QPushButton *save  = new QPushButton(saveIcon, tr("&Save"),   this);
+	QPushButton *quit  = new QPushButton(quitIcon, tr("&Quit"),   this);
+	QHBoxLayout *bhbox = new QHBoxLayout;
+	QHBoxLayout *hbox  = new QHBoxLayout;
+	QVBoxLayout *vbox  = new QVBoxLayout;
 	QVBoxLayout *bvbox = new QVBoxLayout;
 
-	icon = qh_loadIcon("edit-undo", NULL);
-	if (icon.isNull())
-		icon = qh_loadStockIcon(QStyle::SP_ArrowLeft);
-	undo  = new QPushButton(icon, tr("&Undo"), this);
-	undo->setStyleSheet(PB_STYLE);
+	show_all_cb->setChecked(false);
+	show_all_cb->setToolTip(tr("Show entries not visible for " \
+	    "the current desktop environment"));
 
+	undo->setStyleSheet(PB_STYLE);
 	undo->setEnabled(list->canUndo());
 
-	icon = qh_loadIcon("edit-redo", NULL);
-	if (icon.isNull())
-		icon = qh_loadStockIcon(QStyle::SP_ArrowRight);
-	redo  = new QPushButton(icon, tr("&Redo"), this);
 	redo->setStyleSheet(PB_STYLE);
 	redo->setEnabled(list->canRedo());
 
-	icon = qh_loadIcon("list-add", NULL);
-	if (icon.isNull())
-		icon = qh_loadStockIcon(QStyle::SP_FileDialogNewFolder);
-	QPushButton *add  = new QPushButton(icon, tr("&Add"), this);
 	add->setStyleSheet(PB_STYLE);
-	icon = qh_loadIcon("edit-delete", NULL);
-	if (icon.isNull())
-		icon = qh_loadStockIcon(QStyle::SP_TrashIcon);
-	QPushButton *del  = new QPushButton(icon, tr("&Delete"), this);
 	del->setStyleSheet(PB_STYLE);
-	icon = qh_loadIcon("go-up", NULL);
-	if (icon.isNull())
-		icon = qh_loadStockIcon(QStyle::SP_ArrowUp);
-	QPushButton *up   = new QPushButton(icon, tr("&Up"), this);
-	up->setStyleSheet(PB_STYLE);
-	icon = qh_loadIcon("go-down", NULL);
-	if (icon.isNull())
-		icon = qh_loadStockIcon(QStyle::SP_ArrowDown);
-	QPushButton *down = new QPushButton(icon, tr("Dow&n"), this);
-	down->setStyleSheet(PB_STYLE);
+	edit->setStyleSheet(PB_STYLE);
 
-	connect(up,   SIGNAL(clicked()), this, SLOT(upClicked()));
+	connect(list, SIGNAL(listModified(bool)), this,
+	    SLOT(catchListModified(bool)));
+	connect(list, SIGNAL(itemDoubleClicked(entry_t *)), this,
+	    SLOT(catchItemDoubleClicked(entry_t *)));
 	connect(del,  SIGNAL(clicked()), this, SLOT(delClicked()));
 	connect(add,  SIGNAL(clicked()), this, SLOT(addClicked()));
-	connect(down, SIGNAL(clicked()), this, SLOT(downClicked()));
+	connect(edit, SIGNAL(clicked()), this, SLOT(editClicked()));
 	connect(undo, SIGNAL(clicked()), this, SLOT(undoClicked()));
 	connect(redo, SIGNAL(clicked()), this, SLOT(redoClicked()));
-
-	bvbox->addStretch(1);
-	bvbox->addWidget(undo, 1, 0);
-	bvbox->addWidget(redo, 1, 0);
-	bvbox->addWidget(add, 1, 0);
-	bvbox->addWidget(del, 1, 0);
-	bvbox->addWidget(up, 1, 0);
-	bvbox->addWidget(down, 1, 0);
-	bvbox->addStretch(1);
-	
-	QHBoxLayout *hbox = new QHBoxLayout;
-	hbox->addWidget(list);
-	hbox->addLayout(bvbox);
-
-	icon = qh_loadIcon("document-save", NULL);
-	if (icon.isNull())
-		icon = qh_loadStockIcon(QStyle::SP_DialogSaveButton);
-	QPushButton *save = new QPushButton(icon, tr("&Save"), this);
-	icon = qh_loadStockIcon(QStyle::SP_DialogCloseButton);
-	QPushButton *quit = new QPushButton(icon, tr("&Quit"), this);
-
+	connect(show_all_cb, SIGNAL(stateChanged(int)), this,
+	    SLOT(showAll(int)));
 	connect(save, SIGNAL(clicked(bool)), this, SLOT(save()));
 	connect(quit, SIGNAL(clicked(bool)), this, SLOT(quit()));
 
-	QHBoxLayout *bhbox = new QHBoxLayout;
+	bvbox->addStretch(1);
+	bvbox->addWidget(undo, 1);
+	bvbox->addWidget(redo, 1);
+	bvbox->addWidget(add, 1);
+	bvbox->addWidget(edit, 1);
+	bvbox->addWidget(del, 1);
+	bvbox->addStretch(1);
 
-	bhbox->addWidget(save,  1, Qt::AlignRight);
-	bhbox->addWidget(quit,  0, Qt::AlignRight);
+	hbox->addWidget(list);
+	hbox->addLayout(bvbox);
 
-	QVBoxLayout *vbox = new QVBoxLayout;
+	bhbox->addWidget(save, 1, Qt::AlignRight);
+	bhbox->addWidget(quit, 0, Qt::AlignRight);
 
 	vbox->addWidget(label, 0, Qt::AlignCenter);
 	vbox->addLayout(hbox);
+	vbox->addWidget(show_all_cb);
 	vbox->addLayout(bhbox);
 	vbox->setContentsMargins(15, 15, 15, 15);
 
@@ -133,7 +126,6 @@ Mainwin::Mainwin(QWidget *parent) :
 	container->setLayout(vbox);
 	setCentralWidget(container);
 	setWindowTitle("DSBAutostart");
-	setMinimumSize(500, 300);
 	setWindowIcon(qh_loadIcon("system-run", NULL));
 }
 
@@ -146,11 +138,23 @@ Mainwin::catchListModified(bool status)
 }
 
 void
+Mainwin::catchItemDoubleClicked(entry_t *entry)
+{
+	if (entry == NULL)
+		return;
+	EditWin edit(entry, this);
+	if (edit.exec() == QDialog::Accepted) {
+		list->changeCurrentItem(edit.name, edit.command,
+		    edit.comment, edit.notShowIn, edit.onlyShowIn, edit.terminal);
+		list->redraw();
+	}
+}
+
+void
 Mainwin::save()
 {
-	list->update();
-	if (dsbautostart_write(cmdlist) == -1) {
-		qh_errx(this, EXIT_FAILURE, "dsbautostart_write(): %s",
+	if (dsbautostart_save(cmdlist) == -1) {
+		qh_errx(this, EXIT_FAILURE, "dsbautostart_save(): %s",
 		    dsbautostart_strerror());
 	}
 	list->unsetModified();
@@ -162,7 +166,6 @@ Mainwin::quit()
 {
 	QMessageBox msgBox(this);
 
-	list->update();
 	if (!list->modified())
 		QApplication::quit();
 	msgBox.setWindowModality(Qt::WindowModal);
@@ -197,21 +200,30 @@ Mainwin::closeEvent(QCloseEvent *event)
 }
 
 void
-Mainwin::upClicked()
+Mainwin::editClicked()
 {
-	list->moveItemUp();
-}
-
-void
-Mainwin::downClicked()
-{
-	list->moveItemDown();
+	entry_t *entry = list->currentEntry();
+	
+	if (entry == NULL)
+		return;
+	EditWin edit(entry, this);
+	if (edit.exec() == QDialog::Accepted) {
+		list->changeCurrentItem(edit.name, edit.command,
+		    edit.comment, edit.notShowIn, edit.onlyShowIn, edit.terminal);
+		list->redraw();
+	}
 }
 
 void
 Mainwin::addClicked()
 {
-	list->newItem();
+	EditWin edit(NULL, this);
+
+	if (edit.exec() == QDialog::Accepted) {
+		list->newItem(edit.name, edit.command, edit.comment,
+		    edit.notShowIn, edit.onlyShowIn, edit.terminal);
+		list->redraw();
+	}
 }
 
 void
@@ -224,13 +236,16 @@ void
 Mainwin::undoClicked()
 {
 	list->undo();
-	undo->setEnabled(list->canUndo());
 }
 
 void
 Mainwin::redoClicked()
 {
 	list->redo();
-	redo->setEnabled(list->canRedo());
 }
 
+void
+Mainwin::showAll(int state)
+{
+	list->setShowAll((state == Qt::Unchecked ? false : true));
+}

@@ -24,11 +24,115 @@
 
 #include <QLocale>
 #include <QTranslator>
+#include <stdio.h>
+#include <err.h>
+#include <unistd.h>
+#include <sys/syslimits.h>
+
 #include "mainwin.h"
+
+void
+autostart()
+{
+	char	       cmd[PATH_MAX];
+	entry_t	       *ep;
+	dsbautostart_t *as;
+
+	if ((as = dsbautostart_init()) == NULL)
+		errx(EXIT_FAILURE, "%s", dsbautostart_strerror());
+	for (ep = as->cur_entries; ep != NULL; ep = ep->next) {
+		if (ep->exclude || ep->deleted)
+			continue;
+		(void)snprintf(cmd, sizeof(cmd), "%s&", ep->df->exec);
+		switch (system(cmd)) {
+		case  -1:
+		case 127:
+			err(EXIT_FAILURE, "system(%s)", cmd);
+			break;
+		}
+	}
+	exit(EXIT_SUCCESS);
+}
+
+void
+create_from_list()
+{
+	char	       *p, *q, *line = NULL;
+	bool	       is_duplicate;
+	entry_t	       *ep;
+        size_t	       n, linecap = 0;
+	dsbautostart_t *as;
+
+	as = dsbautostart_init();
+	if (as == NULL)
+		errx(EXIT_FAILURE, "%s", dsbautostart_strerror());
+	while (getline(&line, &linecap, stdin) > 0) {
+		n = strspn(line, "\n\t ");
+		p = &line[n];
+		(void)strtok(p, "#\n\r");
+		if (*p == '#' || *p == '\0')
+			continue;
+		for (q = strchr(p, '\0'); q != p; q--) {
+			if (*q == '&') {
+				*q = '\0';
+				break;
+			}
+		}
+		is_duplicate = false;
+		for (ep = as->cur_entries; ep != NULL; ep = ep->next) {
+			if (ep->df == NULL)
+				continue;
+			if (strcmp(ep->df->exec, p) == 0) {
+				is_duplicate = true;
+				break;
+			}
+		}
+		if (is_duplicate)
+			continue;
+		if (dsbautostart_entry_add(as, p, NULL, NULL, NULL,
+		    NULL, false) == NULL)
+			err(EXIT_FAILURE, "%s", dsbautostart_strerror());
+	}
+	if (dsbautostart_save(as) == -1)
+		errx(EXIT_FAILURE, "%s", dsbautostart_strerror());
+	exit(EXIT_SUCCESS);
+}
+
+void
+usage()
+{
+	(void)printf("Usage: %s [-h]\n"					    \
+		     "       %s <-a|-c>\n"				    \
+		     "Options\n"					    \
+		     "-a     Autostart commands, and exit\n"		    \
+		     "-c     Create desktop files in the user's autostart " \
+		     "directory from the\n"				    \
+		     "       command list read from stdin.\n"		    \
+		     "-h     Show this help text.\n", PROGRAM, PROGRAM);
+	exit(EXIT_FAILURE);
+}
 
 int
 main(int argc, char *argv[])
 {
+	int ch;
+
+	while ((ch = getopt(argc, argv, "ach")) != -1) {
+		switch (ch) {
+		case 'a':
+			autostart();
+			break;
+		case 'c':
+			create_from_list();
+			break;
+		case '?':
+		case 'h':
+			usage();
+		}
+	}
+	argc -= optind;
+	argv += optind;
+
 	QApplication app(argc, argv);
 	QTranslator translator;
 
@@ -39,4 +143,3 @@ main(int argc, char *argv[])
 	w.show();
 	return (app.exec());
 }
-

@@ -38,15 +38,13 @@
 #include "list.h"
 
 class Mainwin : public QMainWindow {
-Q_OBJECT
-
+	Q_OBJECT
 public:
 	Mainwin(QWidget *paren = 0);
 	void closeEvent(QCloseEvent *event);
 
 private slots:
-	void upClicked();
-	void downClicked();
+	void editClicked();
 	void save();
 	void quit();
 	void addClicked();
@@ -54,9 +52,11 @@ private slots:
 	void undoClicked();
 	void redoClicked();
 	void catchListModified(bool state);
+	void catchItemDoubleClicked(entry_t *entry);
+	void showAll(int state);
 private:
-	List *list;
-	QPushButton *undo, *redo;
+	List	       *list;
+	QCheckBox      *show_all_cb;
+	QPushButton    *undo, *redo;
 	dsbautostart_t *cmdlist;
 };
-

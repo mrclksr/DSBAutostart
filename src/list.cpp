@@ -23,6 +23,7 @@
  */
 
 #include <QVBoxLayout>
+#include <err.h>
 
 #include "list.h"
 #include "desktopfile.h"
@@ -38,24 +39,17 @@ List::List(dsbautostart_t *as, QWidget *parent)
 	QVBoxLayout *vbox = new QVBoxLayout;
 	vbox->addWidget(list);
 	setLayout(vbox);
-	list->setToolTip(QString(tr("Double click to edit.\n" \
-	    "Use checkbox to activate/deactivate a command.\n" \
-	    "Use Drag & Drop to add desktop files.")));
-	if ((ascp = dsbautostart_copy(as)) == NULL) {
-		if (dsbautostart_error()) {
-			qh_err(this, EXIT_FAILURE, "%s",
-			    dsbautostart_strerror());
-		}
+	list->setToolTip(QString(tr("Use Drag & Drop to add desktop files.")));
+	list->setLayoutMode(QListView::Batched);
+	for (entry_t *entry = as->cur_entries; entry != NULL; entry = entry->next) {
+		if (!entry->deleted && !entry->exclude)
+			addItem(entry);
 	}
-	for (entry_t *entry = as->entry; entry != NULL; entry = entry->next)
-		addItem(entry);
 	_modified = false;
-	connect(list, SIGNAL(itemChanged(QListWidgetItem *)), this,
-	    SLOT(catchItemChanged(QListWidgetItem *)));
-	connect(list, SIGNAL(itemDoubleClicked(QListWidgetItem *)), this,
-	    SLOT(catchDoubleClicked(QListWidgetItem *)));
 	connect(list, SIGNAL(itemDroped(QStringList &)), this,
 	    SLOT(addDesktopFiles(QStringList &)));
+	connect(list, SIGNAL(itemDoubleClicked(QListWidgetItem *)), this,
+	    SLOT(catchDoubleClicked(QListWidgetItem *)));
 	connect(list, SIGNAL(deleteKeyPressed()), this, SLOT(delItem()));
 }
 
@@ -68,54 +62,102 @@ List::modified()
 void
 List::unsetModified()
 {
-	dsbautostart_free(ascp);
-	if ((ascp = dsbautostart_copy(as)) == NULL) {
-		if (dsbautostart_error()) {
-			qh_err(this, EXIT_FAILURE, "%s",
-			    dsbautostart_strerror());
-		}
-	}
 	_modified = false;
 }
 
 void
-List::newItem()
+List::setShowAll(bool show)
 {
-	entry_t *entry = dsbautostart_add_entry(as, "", true);
+	showAll = show;
+	redraw();
+}
 
+entry_t *
+List::currentEntry()
+{
+	QListWidgetItem *item = list->currentItem();
+
+	if (item == 0)
+		return (NULL);
+	return ((entry_t *)item->data(Qt::UserRole).value<void *>());
+}
+
+void
+List::changeCurrentItem(QByteArray &name, QByteArray &command,
+    QByteArray &comment, QByteArray &notShowIn, QByteArray &onlyShowIn,
+    bool terminal)
+{
+	char		*nsi, *osi;
+	entry_t		*entry;
+	QListWidgetItem *item = list->currentItem();
+
+	if (item == 0)
+		return;
+	if (notShowIn.isEmpty())
+		nsi = NULL;
+	else
+		nsi = notShowIn.data();
+	if (onlyShowIn.isEmpty())
+		osi = NULL;
+	else
+		osi = onlyShowIn.data();
+	entry = (entry_t *)item->data(Qt::UserRole).value<void *>();
+	if (dsbautostart_entry_set(as, entry, command.data(),
+	    name.data(), comment.data(), nsi, osi, terminal) == -1)
+		qh_errx(this, EXIT_FAILURE, "%s", dsbautostart_strerror());
+	item->setText(command);
+	if ((entry->df->name != NULL && *entry->df->name != '\0') ||
+	    (entry->df->comment != NULL && *entry->df->comment != '\0')) {
+		warnx("%s, %s", entry->df->name, entry->df->comment);
+		item->setToolTip(QString("%1\n%2")
+			.arg(entry->df->name != NULL ? entry->df->name : "")
+			.arg(entry->df->comment != NULL ? entry->df->comment : ""));
+	} else
+		item->setToolTip(QString(tr("No further description available")));
+	compare();
+}
+
+void
+List::newItem(QByteArray &name, QByteArray &command, QByteArray &comment,
+    QByteArray &notShowIn, QByteArray &onlyShowIn, bool terminal)
+{
+	char	*osi, *nsi;
+	entry_t *entry;
+
+	if (notShowIn.isEmpty())
+		nsi = NULL;
+	else
+		nsi = notShowIn.data();
+	if (onlyShowIn.isEmpty())
+		osi = NULL;
+	else
+		osi = onlyShowIn.data();
+	entry = dsbautostart_entry_add(as, command.data(), name.data(),
+		    comment.data(), nsi, osi, terminal);
 	if (entry == NULL)
 		qh_errx(this, EXIT_FAILURE, "%s", dsbautostart_strerror());
 	QListWidgetItem *item = List::addItem(entry);
-	list->editItem(item);
+	item->setText(command);
 	compare();
 }
 
 QListWidgetItem *
 List::addItem(entry_t *entry)
 {
-	QListWidgetItem *item = new QListWidgetItem(entry->cmd);
-	item->setFlags(Qt::ItemIsEditable | Qt::ItemIsUserCheckable |
-	    Qt::ItemIsSelectable | Qt::ItemIsEnabled);
-	item->setCheckState(entry->active ? Qt::Checked : Qt::Unchecked);
-	item->setData(Qt::UserRole, qVariantFromValue((void *)entry));
+	QListWidgetItem *item = new QListWidgetItem(
+	    entry->df->exec != NULL ? entry->df->exec : "");
+	item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
+	item->setData(Qt::UserRole, QVariant::fromValue((void *)entry));
 	list->addItem(item);
 	items.append(item);
-
+	if ((entry->df->name != NULL && *entry->df->name != '\0') ||
+	    (entry->df->comment != NULL && *entry->df->comment != '\0')) {
+		item->setToolTip(QString("%1\n%2")
+			.arg(entry->df->name != NULL ? entry->df->name : "")
+			.arg(entry->df->comment != NULL ? entry->df->comment : ""));
+	} else
+		item->setToolTip(QString(tr("No further description available")));
 	return (item);
-}
-
-void
-List::catchItemChanged(QListWidgetItem *item)
-{
-	updateItem(item);
-	compare();
-}
-
-void
-List::catchDoubleClicked(QListWidgetItem *item)
-{
-	list->editItem(item);
-	list->setCurrentItem(item, QItemSelectionModel::Deselect);
 }
 
 void
@@ -127,7 +169,7 @@ List::delItem()
 	if (item == 0)
 		return;
 	entry = (entry_t *)item->data(Qt::UserRole).value<void *>();
-	if (dsbautostart_del_entry(as, entry) == NULL)
+	if (dsbautostart_entry_del(as, entry) == NULL)
 		qh_errx(this, EXIT_FAILURE, "%s", dsbautostart_strerror());
 	list->removeItemWidget(item);
 	items.removeOne(item);
@@ -136,76 +178,16 @@ List::delItem()
 }
 
 void
-List::moveItemUp()
+List::catchDoubleClicked(QListWidgetItem *item)
 {
-	int row;
-	entry_t *entry;
-	QListWidgetItem *item = list->currentItem();
-
-	if (item == 0)
-		return;
-	entry = (entry_t *)item->data(Qt::UserRole).value<void *>();
-	if (dsbautostart_entry_move_up(as, entry) == NULL)
-		qh_errx(this, EXIT_FAILURE, "%s", dsbautostart_strerror());
-	row = list->currentRow();
-	if (row == 0)
-		return;
-	list->takeItem(row);
-	list->insertItem(--row, item);
-	list->setCurrentRow(row);
-	compare();
-}
-
-void
-List::moveItemDown()
-{
-	int row;
-	entry_t *entry;
-	QListWidgetItem *item = list->currentItem();
-
-	if (item == 0)
-		return;
-	entry = (entry_t *)item->data(Qt::UserRole).value<void *>();
-	if (dsbautostart_entry_move_down(as, entry) == NULL)
-		qh_errx(this, EXIT_FAILURE, "%s", dsbautostart_strerror());
-	row = list->currentRow();
-
-	if (list->count() - 1 == row)
-		return;
-	list->takeItem(row);
-	list->insertItem(++row, item);
-	list->setCurrentRow(row);
-	compare();
-}
-
-void
-List::updateItem(QListWidgetItem *item)
-{
-	bool cbstate = item->checkState() == Qt::Unchecked ? false : true;
-	entry_t *entry;
-
-	entry = (entry_t *)item->data(Qt::UserRole).value<void *>();
-	if (dsbautostart_set(as, entry, item->text().toUtf8().constData(),
-	    cbstate) == -1)
-		qh_errx(this, EXIT_FAILURE, "%s", dsbautostart_strerror());
-	compare();
-}
-
-void
-List::update()
-{
-	for (int i = 0; i < items.size(); i++)
-		updateItem(items.at(i));
+	emit itemDoubleClicked((entry_t *)item->data(Qt::UserRole).value<void *>());
 }
 
 void
 List::undo()
 {
 	dsbautostart_undo(as);
-	list->clear();
-	items.clear();
-	for (entry_t *entry = as->entry; entry != NULL; entry = entry->next)
-		addItem(entry);
+	redraw();
 	compare();
 }
 
@@ -213,11 +195,22 @@ void
 List::redo()
 {
 	dsbautostart_redo(as);
+	redraw();
+	compare();
+}
+
+void
+List::redraw()
+{
 	list->clear();
 	items.clear();
-	for (entry_t *entry = as->entry; entry != NULL; entry = entry->next)
+	for (entry_t *entry = as->cur_entries; entry != NULL; entry = entry->next) {
+		if (entry->deleted)
+			continue;
+		if (entry->exclude && !showAll)
+			continue;
 		addItem(entry);
-	compare();
+	}
 }
 
 bool
@@ -236,7 +229,7 @@ List::canRedo()
 void
 List::compare()
 {
-	if (!dsbautostart_cmp(ascp, as)) {
+	if (dsbautostart_changed(as)) {
 		emit listModified(true);
 		_modified = true;
 	} else	{
@@ -251,10 +244,7 @@ List::addDesktopFiles(QStringList &list)
 	entry_t *entry;
 
 	for (QString s : list) {
-		DesktopFile df(s);
-		if (df.read() == -1)
-			continue;
-		entry = dsbautostart_add_entry(as, df.cmd.toLocal8Bit().data(), true);
+		entry = dsbautostart_df_add(as, s.toLocal8Bit().data());
 		if (entry == NULL) {
 			qh_errx(this, EXIT_FAILURE, "%s",
 			    dsbautostart_strerror());

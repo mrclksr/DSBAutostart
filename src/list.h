@@ -28,39 +28,46 @@
 #include <QListWidget>
 #include <QWidget>
 #include <QObject>
+
 #include "lib/dsbautostart.h"
 #include "listwidget.h"
 
 class List : public QWidget {
-Q_OBJECT
-
+	Q_OBJECT
 public:
 	List(dsbautostart_t *as, QWidget *parent = 0);
 	QListWidgetItem *addItem(entry_t *entry);
-	void moveItemUp();
-	void moveItemDown();
-	void newItem();
-	void update();
-	void undo();
-	void redo();
 	bool modified();
 	bool canUndo();
 	bool canRedo();
+	void newItem();
+	void undo();
+	void redo();
+	void redraw();
 	void unsetModified();
+	void setShowAll(bool show);
+	void newItem(QByteArray &name, QByteArray &command, QByteArray &comment,
+		     QByteArray &notShowIn, QByteArray &onlyShowIn,
+		     bool terminal);
+	void changeCurrentItem(QByteArray &name, QByteArray &command,
+			       QByteArray &comment, QByteArray &notShowIn,
+			       QByteArray &onlyShowIn, bool terminal);
+	entry_t *currentEntry(void);
+
 public slots:
 	void delItem();
 signals:
 	void listModified(bool);
+	void itemDoubleClicked(entry_t *entry);
 private slots:
-	void catchItemChanged(QListWidgetItem *item);
-	void catchDoubleClicked(QListWidgetItem *item);
 	void addDesktopFiles(QStringList &list);
+	void catchDoubleClicked(QListWidgetItem *item);
 private:
 	void compare();
 private:
-	bool _modified;
-	dsbautostart_t *as, *ascp;
+	bool	       _modified;
+	bool	       showAll = false;
+	ListWidget     *list;
+	dsbautostart_t *as;
 	QList<QListWidgetItem *> items;
-	ListWidget *list;
-	void updateItem(QListWidgetItem *item);
 };

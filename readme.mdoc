@@ -2,7 +2,7 @@
 .Dt DSBAutostart
 .Sh ABOUT
 .Nm DSBAutostart
-is a Qt program that allows you to add commands to be executed at session start.
+is a Qt program to manage your XDG autostart files.
 .Sh INSTALLATION
 .Ss Dependencies
 .Nm
@@ -14,16 +14,44 @@ and
 .Ss Getting the source code
 .Bd -literal
 # git clone https://github.com/mrclksr/DSBAutostart.git
-# git clone https://github.com/mrclksr/dsbcfg.git
 .Ss Building and installation
 .Bd -literal
 # cd DSBAutostart && qmake && make
 # make install
 .Ed
 .Sh SETUP
-Add the following command to your ~/.xinitrc, or to your window manager's
-startup script (e.g. ~/.config/openbox/autostart.sh):
-.Bd -literal -offset indet
-sh ~/.config/DSB/autostart.sh&
+.Ss Openbox
+.Em Openbox
+supports XDG autostart through its
+.Em openbox-xdg-autostart
+script.
+Just install
+.Em devel/py-xdg .
+.Ss Other window managers and desktop environments
+If your window manager (WM) or desktop environment (DE) does not support XDG
+autostart, add the line
+.Ql dsbautostart -a
+to your WM/DE's autostart script.
+Alternatively, if you use 
+.Em ~/.xinitrc
+to start your WM/DE, add the line 
+.Ql dsbautostart -a
+to
+.Em ~/.xinitrc .
+.Sh Upgrading from previous versions < 2.0
+In order to upgrade from a previous version < 2.0, convert the commands from
+.Em ~/.config/DSB/autostart.sh
+to desktop files in
+.Em $XDG_CONFIG_HOME/autostart :
+.Bd -literal -offset indent
+% dsbautostart -c < ~/.config/DSB/autostart.sh
 .Ed
+
+Make sure to remove calls to
+.Em ~/.config/DSB/autostart.sh
+from your window manager's autostart file, or your
+.Em ~/.xinitrc .
+Finally follow the steps in the
+.Sx SETUP
+section above.
 

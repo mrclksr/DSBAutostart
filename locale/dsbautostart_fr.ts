@@ -2,93 +2,170 @@
 <!DOCTYPE TS>
 <TS version="2.1" language="fr_FR">
 <context>
+    <name>EditWin</name>
+    <message>
+        <location filename="../src/editwin.cpp" line="38"/>
+        <source>&amp;Ok</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/editwin.cpp" line="39"/>
+        <source>&amp;Cancel</source>
+        <translation type="unfinished">&amp;Cancel</translation>
+    </message>
+    <message>
+        <location filename="../src/editwin.cpp" line="59"/>
+        <source>Run in terminal</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/editwin.cpp" line="67"/>
+        <source>Edit</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/editwin.cpp" line="69"/>
+        <source>New</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/editwin.cpp" line="71"/>
+        <source>Name</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/editwin.cpp" line="72"/>
+        <source>Command</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/editwin.cpp" line="73"/>
+        <source>Comment</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/editwin.cpp" line="106"/>
+        <source>Command field must not be empty</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/editwin.cpp" line="134"/>
+        <source>Visibility</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/editwin.cpp" line="136"/>
+        <source>Not show in:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/editwin.cpp" line="137"/>
+        <source>Only show in:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/editwin.cpp" line="140"/>
+        <source>Define a semicolon (;) separated list of desktop environment names if
+you want to limit the execution of this command to certain environments.
+E.g.: MATE;XFCE</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>List</name>
     <message>
-        <location filename="../src/list.cpp" line="41"/>
-        <source>Double click to edit.
-Use checkbox to activate/deactivate a command.
-Use Drag &amp; Drop to add desktop files.</source>
-        <translation>Double-cliquez pour éditer.
-Utilisez la case à cocher pour activer/désactiver une commande.
-Glissez et déposez pour ajouter des fichiers desktop.</translation>
+        <location filename="../src/list.cpp" line="42"/>
+        <source>Use Drag &amp; Drop to add desktop files.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/list.cpp" line="116"/>
+        <location filename="../src/list.cpp" line="159"/>
+        <source>No further description available</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>Mainwin</name>
     <message>
-        <location filename="../src/mainwin.cpp" line="49"/>
+        <location filename="../src/mainwin.cpp" line="65"/>
         <source>Add commands to be executed at session start</source>
         <translation>Ajoutez des commandes à exécuter au démarrage de la session</translation>
     </message>
     <message>
-        <location filename="../src/mainwin.cpp" line="57"/>
+        <location filename="../src/mainwin.cpp" line="62"/>
         <source>&amp;Undo</source>
         <translation>Ann&amp;uler</translation>
     </message>
     <message>
-        <location filename="../src/mainwin.cpp" line="65"/>
+        <location filename="../src/mainwin.cpp" line="61"/>
         <source>&amp;Redo</source>
         <translation>&amp;Rétablir</translation>
     </message>
     <message>
-        <location filename="../src/mainwin.cpp" line="72"/>
-        <source>&amp;Add</source>
-        <translation>&amp;Ajouter</translation>
-    </message>
-    <message>
-        <location filename="../src/mainwin.cpp" line="77"/>
+        <location filename="../src/mainwin.cpp" line="68"/>
         <source>&amp;Delete</source>
         <translation>&amp;Delete</translation>
     </message>
     <message>
-        <location filename="../src/mainwin.cpp" line="82"/>
-        <source>&amp;Up</source>
-        <translation>&amp;Up</translation>
+        <location filename="../src/mainwin.cpp" line="63"/>
+        <source>Show all</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwin.cpp" line="87"/>
-        <source>Dow&amp;n</source>
-        <translation>Dow&amp;n</translation>
+        <location filename="../src/mainwin.cpp" line="67"/>
+        <source>&amp;New</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainwin.cpp" line="113"/>
-        <location filename="../src/mainwin.cpp" line="175"/>
+        <location filename="../src/mainwin.cpp" line="69"/>
+        <source>&amp;Edit</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/mainwin.cpp" line="70"/>
+        <location filename="../src/mainwin.cpp" line="178"/>
         <source>&amp;Save</source>
         <translation>&amp;Sauvegarder</translation>
     </message>
     <message>
-        <location filename="../src/mainwin.cpp" line="115"/>
+        <location filename="../src/mainwin.cpp" line="71"/>
         <source>&amp;Quit</source>
         <translation>&amp;Quitter</translation>
     </message>
     <message>
-        <location filename="../src/mainwin.cpp" line="145"/>
+        <location filename="../src/mainwin.cpp" line="78"/>
+        <source>Show entries not visible for the current desktop environment</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/mainwin.cpp" line="137"/>
         <source>Modified</source>
         <translation>Modifié</translation>
     </message>
     <message>
-        <location filename="../src/mainwin.cpp" line="157"/>
+        <location filename="../src/mainwin.cpp" line="161"/>
         <source>Saved</source>
         <translation>Sauvegardé</translation>
     </message>
     <message>
-        <location filename="../src/mainwin.cpp" line="169"/>
-        <location filename="../src/mainwin.cpp" line="170"/>
+        <location filename="../src/mainwin.cpp" line="172"/>
+        <location filename="../src/mainwin.cpp" line="173"/>
         <source>The file has been modified.</source>
         <translation>Le fichier a été modifié.</translation>
     </message>
     <message>
-        <location filename="../src/mainwin.cpp" line="171"/>
+        <location filename="../src/mainwin.cpp" line="174"/>
         <source>Do you want to save your changes?</source>
         <translation>Voulez-vous sauvegarder vos changements ?</translation>
     </message>
     <message>
-        <location filename="../src/mainwin.cpp" line="177"/>
+        <location filename="../src/mainwin.cpp" line="180"/>
         <source>&amp;Quit without saving</source>
         <translation>&amp;Quitter sans sauvegarder</translation>
     </message>
     <message>
-        <location filename="../src/mainwin.cpp" line="178"/>
+        <location filename="../src/mainwin.cpp" line="181"/>
         <source>&amp;Cancel</source>
         <translation>&amp;Cancel</translation>
     </message>
