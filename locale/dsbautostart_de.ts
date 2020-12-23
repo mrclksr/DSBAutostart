@@ -91,84 +91,88 @@ Beispiel: MATE;XFCE</translation>
 <context>
     <name>Mainwin</name>
     <message>
-        <location filename="../src/mainwin.cpp" line="65"/>
         <source>Add commands to be executed at session start</source>
-        <translation>Fügen Sie Befehle hinzu, die zum Sitzungsbeginn gestartet werden sollen</translation>
+        <translation type="vanished">Fügen Sie Befehle hinzu, die zum Sitzungsbeginn gestartet werden sollen</translation>
     </message>
     <message>
-        <location filename="../src/mainwin.cpp" line="62"/>
+        <location filename="../src/mainwin.cpp" line="63"/>
         <source>&amp;Undo</source>
         <translation>&amp;Rückgängig</translation>
     </message>
     <message>
-        <location filename="../src/mainwin.cpp" line="61"/>
+        <location filename="../src/mainwin.cpp" line="62"/>
         <source>&amp;Redo</source>
         <translation>&amp;Wiederholen</translation>
     </message>
     <message>
-        <location filename="../src/mainwin.cpp" line="68"/>
+        <location filename="../src/mainwin.cpp" line="70"/>
         <source>&amp;Delete</source>
         <translation>&amp;Löschen</translation>
     </message>
     <message>
-        <location filename="../src/mainwin.cpp" line="63"/>
+        <location filename="../src/mainwin.cpp" line="64"/>
         <source>Show all</source>
         <translation>Zeige alle</translation>
     </message>
     <message>
-        <location filename="../src/mainwin.cpp" line="67"/>
+        <location filename="../src/mainwin.cpp" line="66"/>
+        <source>Add commands to be executed on session start</source>
+        <translation>Fügen Sie Befehle hinzu, die zum Sitzungsbeginn gestartet werden sollen</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwin.cpp" line="69"/>
         <source>&amp;New</source>
         <translation>&amp;Neu</translation>
     </message>
     <message>
-        <location filename="../src/mainwin.cpp" line="69"/>
+        <location filename="../src/mainwin.cpp" line="71"/>
         <source>&amp;Edit</source>
         <translation>&amp;Bearbeiten</translation>
     </message>
     <message>
-        <location filename="../src/mainwin.cpp" line="70"/>
-        <location filename="../src/mainwin.cpp" line="178"/>
+        <location filename="../src/mainwin.cpp" line="72"/>
+        <location filename="../src/mainwin.cpp" line="183"/>
         <source>&amp;Save</source>
         <translation>&amp;Speichern</translation>
     </message>
     <message>
-        <location filename="../src/mainwin.cpp" line="71"/>
+        <location filename="../src/mainwin.cpp" line="73"/>
         <source>&amp;Quit</source>
         <translation>&amp;Beenden</translation>
     </message>
     <message>
-        <location filename="../src/mainwin.cpp" line="78"/>
+        <location filename="../src/mainwin.cpp" line="82"/>
         <source>Show entries not visible for the current desktop environment</source>
         <translation>Zeige Einträge, die für die aktuelle Desktop-Umgebung nicht sichtbar sind</translation>
     </message>
     <message>
-        <location filename="../src/mainwin.cpp" line="137"/>
+        <location filename="../src/mainwin.cpp" line="142"/>
         <source>Modified</source>
         <translation>Verändert</translation>
     </message>
     <message>
-        <location filename="../src/mainwin.cpp" line="161"/>
+        <location filename="../src/mainwin.cpp" line="166"/>
         <source>Saved</source>
         <translation>Gespeichert</translation>
     </message>
     <message>
-        <location filename="../src/mainwin.cpp" line="172"/>
-        <location filename="../src/mainwin.cpp" line="173"/>
+        <location filename="../src/mainwin.cpp" line="177"/>
+        <location filename="../src/mainwin.cpp" line="178"/>
         <source>The file has been modified.</source>
         <translation>Die Datei wurde verändert.</translation>
     </message>
     <message>
-        <location filename="../src/mainwin.cpp" line="174"/>
+        <location filename="../src/mainwin.cpp" line="179"/>
         <source>Do you want to save your changes?</source>
         <translation>Möchten Sie die Änderungen speichern?</translation>
     </message>
     <message>
-        <location filename="../src/mainwin.cpp" line="180"/>
+        <location filename="../src/mainwin.cpp" line="185"/>
         <source>&amp;Quit without saving</source>
         <translation>&amp;Beenden ohne zu speichern</translation>
     </message>
     <message>
-        <location filename="../src/mainwin.cpp" line="181"/>
+        <location filename="../src/mainwin.cpp" line="186"/>
         <source>&amp;Cancel</source>
         <translation>&amp;Abbrechen</translation>
     </message>
