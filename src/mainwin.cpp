@@ -39,6 +39,7 @@ Mainwin::Mainwin(QWidget *parent) :
 			    dsbautostart_strerror());
 		}
 	}
+	QIcon runIcon	   = qh_loadIcon("system-run", NULL);
 	QIcon editIcon	   = qh_loadIcon("edit", NULL);
 	QIcon addIcon	   = qh_loadIcon("list-add", NULL);
 	QIcon delIcon	   = qh_loadIcon("edit-delete", NULL);
@@ -62,18 +63,21 @@ Mainwin::Mainwin(QWidget *parent) :
 	undo		   = new QPushButton(undoIcon, tr("&Undo"), this);
 	show_all_cb	   = new QCheckBox(tr("Show all"));
 	QWidget *container = new QWidget();
-	QLabel *label	   = new QLabel(tr("Add commands to be executed at " \
+	QLabel *label	   = new QLabel(tr("Add commands to be executed on " \
 					"session start"));
+	QLabel *pic	   = new QLabel();
 	QPushButton *add   = new QPushButton(addIcon,  tr("&New"),    this);
 	QPushButton *del   = new QPushButton(delIcon,  tr("&Delete"), this);
 	QPushButton *edit  = new QPushButton(editIcon, tr("&Edit"),   this);
 	QPushButton *save  = new QPushButton(saveIcon, tr("&Save"),   this);
 	QPushButton *quit  = new QPushButton(quitIcon, tr("&Quit"),   this);
 	QHBoxLayout *bhbox = new QHBoxLayout;
+	QHBoxLayout *hhbox = new QHBoxLayout;
 	QHBoxLayout *hbox  = new QHBoxLayout;
 	QVBoxLayout *vbox  = new QVBoxLayout;
 	QVBoxLayout *bvbox = new QVBoxLayout;
 
+	pic->setPixmap(runIcon.pixmap(64));
 	show_all_cb->setChecked(false);
 	show_all_cb->setToolTip(tr("Show entries not visible for " \
 	    "the current desktop environment"));
@@ -112,11 +116,12 @@ Mainwin::Mainwin(QWidget *parent) :
 
 	hbox->addWidget(list);
 	hbox->addLayout(bvbox);
-
-	bhbox->addWidget(save, 1, Qt::AlignRight);
-	bhbox->addWidget(quit, 0, Qt::AlignRight);
-
-	vbox->addWidget(label, 0, Qt::AlignCenter);
+	hhbox->addWidget(pic,   0, Qt::AlignLeft);
+	hhbox->addWidget(label, 1, Qt::AlignCenter);
+	hhbox->addStretch(1);
+	bhbox->addWidget(save,  1, Qt::AlignRight);
+	bhbox->addWidget(quit,  0, Qt::AlignRight);
+	vbox->addLayout(hhbox);
 	vbox->addLayout(hbox);
 	vbox->addWidget(show_all_cb);
 	vbox->addLayout(bhbox);
